@@ -40,14 +40,7 @@ const globalLimiter = rateLimit({
 });
 app.use('/api/', globalLimiter);
 
-// Stricter limit for expensive AI analysis endpoints
-const analysisLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000,
-  max: 20,
-  message: { success: false, error: 'Zu viele Anfragen. Bitte in einer Stunde erneut versuchen.' },
-});
-app.use('/api/politicians/:id/analysis', analysisLimiter);
-app.use('/api/parties/:id/analysis', analysisLimiter);
+// Analysis rate limit is applied per-route inside politicians.ts and parties.ts
 
 // Routes
 app.use('/api/auth', authRouter);

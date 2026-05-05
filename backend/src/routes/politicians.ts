@@ -1,9 +1,16 @@
 import { Router } from 'express';
+import { rateLimit } from 'express-rate-limit';
 import { optionalAuth, AuthRequest } from '../middleware/auth';
 import { getAnalysis } from '../services/aiService';
 import { searchWikidata } from '../services/wikidataService';
 
 export const politiciansRouter = Router();
+
+const analysisLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 20,
+  message: { success: false, error: 'Zu viele Analyse-Anfragen. Bitte in einer Stunde erneut versuchen.' },
+});
 
 politiciansRouter.get('/search', async (req, res) => {
   const { q, country } = req.query as { q?: string; country?: string };
@@ -21,7 +28,7 @@ politiciansRouter.get('/search', async (req, res) => {
   }
 });
 
-politiciansRouter.get('/:id/analysis', optionalAuth, async (req: AuthRequest, res) => {
+politiciansRouter.get('/:id/analysis', analysisLimiter, optionalAuth, async (req: AuthRequest, res) => {
   const { id } = req.params;
   const { name } = req.query as { name?: string };
 
