@@ -1,6 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import NodeCache from 'node-cache';
 import { prisma } from '../lib/prisma';
+import type { Prisma } from '@prisma/client';
 import type { AnalysisResult, ArticleSnippet, SentimentLabel } from '@wpn/shared-types';
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
@@ -45,10 +46,18 @@ export async function getAnalysis(
   const ttl = isPlusUser ? TTL_PLUS_MS : TTL_FREE_MS;
   const expiresAt = new Date(Date.now() + ttl);
 
+  const analysisData = {
+    summary: analysis.summary,
+    sentiment: analysis.sentiment,
+    sentimentLabel: analysis.sentimentLabel,
+    articles: analysis.articles as unknown as Prisma.InputJsonValue,
+    keywords: analysis.keywords as unknown as Prisma.InputJsonValue,
+  };
+
   const saved = await prisma.analysis.upsert({
     where: { entityId_entityType: { entityId, entityType } },
-    create: { entityType, entityId, entityName, expiresAt, ...analysis },
-    update: { entityName, expiresAt, generatedAt: new Date(), ...analysis },
+    create: { entityType, entityId, entityName, expiresAt, ...analysisData },
+    update: { entityName, expiresAt, generatedAt: new Date(), ...analysisData },
   });
 
   const result = rowToResult(saved, false);

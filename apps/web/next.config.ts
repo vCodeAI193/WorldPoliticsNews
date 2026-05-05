@@ -1,6 +1,7 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
+  transpilePackages: ['@wpn/shared-types'],
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'commons.wikimedia.org' },

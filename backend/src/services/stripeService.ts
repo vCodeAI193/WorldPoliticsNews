@@ -2,7 +2,7 @@ import Stripe from 'stripe';
 import { prisma } from '../lib/prisma';
 
 export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder', {
-  apiVersion: '2024-06-20',
+  apiVersion: '2024-04-10',
 });
 
 export async function createCheckoutSession(userId: string, userEmail: string): Promise<string> {
@@ -60,7 +60,7 @@ export async function handleStripeWebhook(rawBody: Buffer, signature: string): P
 
   switch (event.type) {
     case 'checkout.session.completed': {
-      const session = event.data.object as Stripe.CheckoutSession;
+      const session = event.data.object as Stripe.Checkout.Session;
       const userId = session.metadata?.userId;
       if (userId) {
         await prisma.user.update({ where: { id: userId }, data: { subscriptionTier: 'plus' } });
