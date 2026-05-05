@@ -3,8 +3,11 @@ import { rateLimit } from 'express-rate-limit';
 import { optionalAuth, AuthRequest } from '../middleware/auth';
 import { getAnalysis } from '../services/aiService';
 import { searchWikidata } from '../services/wikidataService';
+import { MOCK_SEARCH_POLITICIANS, getMockAnalysis } from '../services/mockData';
 
 export const politiciansRouter = Router();
+
+const isDemoMode = process.env.DEMO_MODE === 'true';
 
 const analysisLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
@@ -17,6 +20,13 @@ politiciansRouter.get('/search', async (req, res) => {
 
   if (!q || q.trim().length < 2) {
     return res.status(400).json({ success: false, error: 'Suchbegriff muss mindestens 2 Zeichen lang sein' });
+  }
+
+  if (isDemoMode) {
+    const filtered = MOCK_SEARCH_POLITICIANS.entities.filter((e) =>
+      e.name.toLowerCase().includes(q.toLowerCase())
+    );
+    return res.json({ success: true, data: { entities: filtered.length ? filtered : MOCK_SEARCH_POLITICIANS.entities, total: filtered.length } });
   }
 
   try {
@@ -34,6 +44,10 @@ politiciansRouter.get('/:id/analysis', analysisLimiter, optionalAuth, async (req
 
   if (!name?.trim()) {
     return res.status(400).json({ success: false, error: 'Parameter "name" ist erforderlich' });
+  }
+
+  if (isDemoMode) {
+    return res.json({ success: true, data: getMockAnalysis(id, name.trim(), 'politician') });
   }
 
   const isPlusUser = req.user?.subscriptionTier === 'plus';

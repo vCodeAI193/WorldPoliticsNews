@@ -17,11 +17,13 @@ export async function searchWikidata(
     type: 'item',
     limit: '10',
     format: 'json',
-    origin: '*',
   });
 
   const response = await fetch(`${WIKIDATA_SEARCH}?${params}`, {
-    headers: { 'User-Agent': USER_AGENT },
+    headers: {
+      'User-Agent': USER_AGENT,
+      'Accept': 'application/json',
+    },
     signal: AbortSignal.timeout(8000),
   });
 
