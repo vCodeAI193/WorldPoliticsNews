@@ -1,0 +1,45 @@
+{
+  "expo": {
+    "name": "WorldPoliticsNews",
+    "slug": "worldpoliticsnews",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#1a56db"
+    },
+    "ios": {
+      "bundleIdentifier": "de.worldpoliticsnews.app",
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "de.worldpoliticsnews.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#1a56db"
+      }
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "react-native-google-mobile-ads",
+        {
+          "androidAppId": "ca-app-pub-REPLACE_WITH_REAL_ID~REPLACE",
+          "iosAppId": "ca-app-pub-REPLACE_WITH_REAL_ID~REPLACE"
+        }
+      ]
+    ],
+    "scheme": "worldpoliticsnews",
+    "extra": {
+      "API_URL": "https://api.worldpoliticsnews.de",
+      "REVENUECAT_API_KEY_IOS": "REPLACE_WITH_REAL_KEY",
+      "REVENUECAT_API_KEY_ANDROID": "REPLACE_WITH_REAL_KEY",
+      "eas": {
+        "projectId": "REPLACE_WITH_EAS_PROJECT_ID"
+      }
+    }
+  }
+}

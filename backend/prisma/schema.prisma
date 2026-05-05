@@ -1,0 +1,64 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String          @id @default(cuid())
+  email            String          @unique
+  passwordHash     String
+  subscriptionTier String          @default("free")
+  stripeCustomerId String?         @unique
+  revenueCatUserId String?         @unique
+  watchlist        WatchlistItem[]
+  refreshTokens    RefreshToken[]
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model WatchlistItem {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  entityType    String
+  entityId      String
+  entityName    String
+  entityCountry String?
+  createdAt     DateTime @default(now())
+
+  @@unique([userId, entityId])
+  @@index([userId])
+}
+
+model Analysis {
+  id             String   @id @default(cuid())
+  entityType     String
+  entityId       String
+  entityName     String
+  summary        String   @db.Text
+  sentiment      Float
+  sentimentLabel String
+  articles       Json
+  keywords       Json
+  generatedAt    DateTime @default(now())
+  expiresAt      DateTime
+
+  @@unique([entityId, entityType])
+  @@index([entityId, entityType])
+  @@index([expiresAt])
+}

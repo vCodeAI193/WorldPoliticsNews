@@ -1,0 +1,22 @@
+{
+  "name": "worldpoliticsnews",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "apps/web",
+    "apps/mobile",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:backend": "npm run dev --workspace=backend",
+    "dev:web": "npm run dev --workspace=apps/web",
+    "build:backend": "npm run build --workspace=backend",
+    "build:web": "npm run build --workspace=apps/web",
+    "db:generate": "npm run db:generate --workspace=backend",
+    "db:migrate": "npm run db:migrate --workspace=backend",
+    "db:studio": "npm run db:studio --workspace=backend"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
