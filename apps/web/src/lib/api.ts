@@ -5,7 +5,7 @@ const BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const token =
     typeof window !== 'undefined'
-      ? JSON.parse(localStorage.getItem('wpn-auth') || '{}')?.state?.token
+      ? JSON.parse(window.localStorage.getItem('wpn-auth') || '{}')?.state?.token
       : null;
 
   const res = await fetch(`${BASE}${path}`, {
@@ -30,7 +30,7 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 async function refreshAccessToken(): Promise<boolean> {
-  const stored = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('wpn-auth') || '{}') : {};
+  const stored = typeof window !== 'undefined' ? JSON.parse(window.localStorage.getItem('wpn-auth') || '{}') : {};
   const refreshToken = stored?.state?.refreshToken;
   if (!refreshToken) return false;
 
@@ -41,10 +41,10 @@ async function refreshAccessToken(): Promise<boolean> {
       body: JSON.stringify({ refreshToken }),
     });
     const data = await res.json();
-    if (data.success) {
-      const current = JSON.parse(localStorage.getItem('wpn-auth') || '{}');
+    if (data.success && typeof window !== 'undefined') {
+      const current = JSON.parse(window.localStorage.getItem('wpn-auth') || '{}');
       current.state = { ...current.state, token: data.data.token };
-      localStorage.setItem('wpn-auth', JSON.stringify(current));
+      window.localStorage.setItem('wpn-auth', JSON.stringify(current));
       return true;
     }
   } catch {}

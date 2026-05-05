@@ -11,18 +11,17 @@ interface Props {
 
 export function AdBanner({ slot, format = 'auto', className = '' }: Props) {
   const { user } = useAuthStore();
-
-  // Plus-Abonnenten sehen keine Werbung
-  if (user?.subscriptionTier === 'plus') return null;
+  const adsenseId = process.env.NEXT_PUBLIC_ADSENSE_ID;
+  const isPlus = user?.subscriptionTier === 'plus';
 
   useEffect(() => {
+    if (isPlus || !adsenseId) return;
     try {
       ((window as any).adsbygoogle = (window as any).adsbygoogle || []).push({});
     } catch {}
-  }, []);
+  }, [isPlus, adsenseId]);
 
-  const adsenseId = process.env.NEXT_PUBLIC_ADSENSE_ID;
-  if (!adsenseId) return null;
+  if (isPlus || !adsenseId) return null;
 
   return (
     <div className={`my-4 ${className}`}>

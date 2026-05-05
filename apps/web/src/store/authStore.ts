@@ -1,7 +1,7 @@
 'use client';
 
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { createJSONStorage, persist } from 'zustand/middleware';
 import type { UserPublic } from '@wpn/shared-types';
 
 interface AuthState {
@@ -13,6 +13,21 @@ interface AuthState {
   clearAuth: () => void;
   isPlus: () => boolean;
 }
+
+const safeLocalStorage = {
+  getItem: (name: string): string | null => {
+    if (typeof window === 'undefined') return null;
+    return window.localStorage.getItem(name);
+  },
+  setItem: (name: string, value: string): void => {
+    if (typeof window === 'undefined') return;
+    window.localStorage.setItem(name, value);
+  },
+  removeItem: (name: string): void => {
+    if (typeof window === 'undefined') return;
+    window.localStorage.removeItem(name);
+  },
+};
 
 export const useAuthStore = create<AuthState>()(
   persist(
@@ -27,6 +42,7 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: 'wpn-auth',
+      storage: createJSONStorage(() => safeLocalStorage),
       partialize: (state) => ({
         user: state.user,
         token: state.token,
