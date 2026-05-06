@@ -82,6 +82,15 @@ export interface ApiError {
 
 export type ApiResponse<T> = ApiSuccess<T> | ApiError;
 
+// Sentiment helpers
+export function toSentimentLabel(score: number): SentimentLabel {
+  if (score <= -0.6) return 'sehr negativ';
+  if (score <= -0.2) return 'negativ';
+  if (score < 0.2) return 'neutral';
+  if (score < 0.6) return 'positiv';
+  return 'sehr positiv';
+}
+
 // Subscription
 export interface SubscriptionStatus {
   tier: 'free' | 'plus';

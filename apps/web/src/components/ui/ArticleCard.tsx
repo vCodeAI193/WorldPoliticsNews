@@ -1,18 +1,10 @@
 import type { ArticleSnippet } from '@wpn/shared-types';
+import { toSentimentLabel } from '@wpn/shared-types';
 import { SentimentBadge } from './SentimentBadge';
-import type { SentimentLabel } from '@wpn/shared-types';
 
 interface Props {
   article: ArticleSnippet;
   index: number;
-}
-
-function toLabel(score: number): SentimentLabel {
-  if (score <= -0.6) return 'sehr negativ';
-  if (score <= -0.2) return 'negativ';
-  if (score < 0.2) return 'neutral';
-  if (score < 0.6) return 'positiv';
-  return 'sehr positiv';
 }
 
 export function ArticleCard({ article, index }: Props) {
@@ -36,7 +28,7 @@ export function ArticleCard({ article, index }: Props) {
           <p className="text-sm text-gray-600 mt-1 line-clamp-3">{article.snippet}</p>
         </div>
         <div className="shrink-0">
-          <SentimentBadge label={toLabel(article.sentiment)} />
+          <SentimentBadge label={toSentimentLabel(article.sentiment)} />
         </div>
       </div>
     </div>

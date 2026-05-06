@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { z } from 'zod';
 import { prisma } from '../lib/prisma';
+import { TOKEN_TTL } from '../constants';
 
 export const authRouter = Router();
 
@@ -12,11 +13,11 @@ const credentialsSchema = z.object({
 });
 
 function signAccessToken(userId: string, email: string, tier: string) {
-  return jwt.sign({ sub: userId, email, tier }, process.env.JWT_SECRET!, { expiresIn: '15m' });
+  return jwt.sign({ sub: userId, email, tier }, process.env.JWT_SECRET!, { expiresIn: TOKEN_TTL.ACCESS });
 }
 
 function signRefreshToken(userId: string) {
-  return jwt.sign({ sub: userId }, process.env.JWT_REFRESH_SECRET!, { expiresIn: '30d' });
+  return jwt.sign({ sub: userId }, process.env.JWT_REFRESH_SECRET!, { expiresIn: TOKEN_TTL.REFRESH });
 }
 
 authRouter.post('/register', async (req, res) => {
@@ -41,7 +42,7 @@ authRouter.post('/register', async (req, res) => {
     data: {
       token: refreshToken,
       userId: user.id,
-      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      expiresAt: new Date(Date.now() + TOKEN_TTL.REFRESH_MS),
     },
   });
 
@@ -74,7 +75,7 @@ authRouter.post('/login', async (req, res) => {
     data: {
       token: refreshToken,
       userId: user.id,
-      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      expiresAt: new Date(Date.now() + TOKEN_TTL.REFRESH_MS),
     },
   });
 

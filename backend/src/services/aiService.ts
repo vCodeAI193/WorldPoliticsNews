@@ -2,13 +2,14 @@ import Anthropic from '@anthropic-ai/sdk';
 import NodeCache from 'node-cache';
 import { prisma } from '../lib/prisma';
 import type { Prisma } from '@prisma/client';
-import type { AnalysisResult, ArticleSnippet, SentimentLabel } from '@wpn/shared-types';
+import { toSentimentLabel, type AnalysisResult, type ArticleSnippet, type SentimentLabel } from '@wpn/shared-types';
+import { CACHE_TTL } from '../constants';
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 const memCache = new NodeCache({ stdTTL: 3600, checkperiod: 120 });
 
-const TTL_FREE_MS = 60 * 60 * 1000;    // 1 hour
-const TTL_PLUS_MS = 30 * 60 * 1000;    // 30 minutes
+const TTL_FREE_MS = CACHE_TTL.FREE_MS;
+const TTL_PLUS_MS = CACHE_TTL.PLUS_MS;
 
 const TRUSTED_SOURCES = [
   'reuters.com', 'bbc.com', 'bbc.co.uk', 'theguardian.com', 'apnews.com',
@@ -203,13 +204,6 @@ Regeln:
   };
 }
 
-function toSentimentLabel(score: number): SentimentLabel {
-  if (score <= -0.6) return 'sehr negativ';
-  if (score <= -0.2) return 'negativ';
-  if (score < 0.2) return 'neutral';
-  if (score < 0.6) return 'positiv';
-  return 'sehr positiv';
-}
 
 function rowToResult(row: any, cached: boolean): AnalysisResult {
   return {

@@ -12,6 +12,7 @@ if (missingVars.length > 0) {
 }
 
 import express from 'express';
+import { RATE_LIMIT } from './constants';
 import cors from 'cors';
 import helmet from 'helmet';
 import { rateLimit } from 'express-rate-limit';
@@ -45,8 +46,8 @@ app.use(express.json());
 
 // Global rate limit
 const globalLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 200,
+  windowMs: RATE_LIMIT.GLOBAL_WINDOW_MS,
+  max: RATE_LIMIT.GLOBAL_MAX,
   standardHeaders: true,
   legacyHeaders: false,
 });
