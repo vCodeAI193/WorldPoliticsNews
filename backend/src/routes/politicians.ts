@@ -26,7 +26,8 @@ politiciansRouter.get('/search', async (req, res) => {
     const filtered = MOCK_SEARCH_POLITICIANS.entities.filter((e) =>
       e.name.toLowerCase().includes(q.toLowerCase())
     );
-    return res.json({ success: true, data: { entities: filtered.length ? filtered : MOCK_SEARCH_POLITICIANS.entities, total: filtered.length } });
+    const entities = filtered.length ? filtered : MOCK_SEARCH_POLITICIANS.entities;
+    return res.json({ success: true, data: { entities, total: entities.length } });
   }
 
   try {

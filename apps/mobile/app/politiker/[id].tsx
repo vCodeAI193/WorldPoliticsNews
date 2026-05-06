@@ -24,7 +24,7 @@ export default function PoliticianDetailScreen() {
       .then(setAnalysis)
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
-  }, [id, entityName]);
+  }, [id, entityName, navigation]);
 
   if (loading) {
     return (

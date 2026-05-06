@@ -15,16 +15,17 @@ function KontoInner() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!user) {
-      router.push('/auth/login');
-      return;
-    }
-    // Refresh user data on mount (detects subscription changes)
+    if (!user) router.push('/auth/login');
+  }, [user, router]);
+
+  useEffect(() => {
+    if (!user) return;
     api.users.me().then((freshUser) => {
       if (freshUser && token && refreshToken) {
         setAuth(freshUser, token, refreshToken);
       }
     }).catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function handlePortal() {

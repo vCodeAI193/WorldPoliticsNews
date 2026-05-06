@@ -23,6 +23,11 @@ export function SentimentGauge({ score, label }: Props) {
   return (
     <View style={styles.container}>
       <View style={styles.track}>
+        <View style={[styles.segment, { backgroundColor: '#dc2626', borderTopLeftRadius: 7, borderBottomLeftRadius: 7 }]} />
+        <View style={[styles.segment, { backgroundColor: '#f97316' }]} />
+        <View style={[styles.segment, { backgroundColor: '#eab308' }]} />
+        <View style={[styles.segment, { backgroundColor: '#84cc16' }]} />
+        <View style={[styles.segment, { backgroundColor: '#16a34a', borderTopRightRadius: 7, borderBottomRightRadius: 7 }]} />
         <View style={[styles.dot, { left: `${dotLeft}%` as any, borderColor: color }]} />
       </View>
       <View style={styles.labels}>
@@ -41,11 +46,13 @@ const styles = StyleSheet.create({
   track: {
     height: 14,
     borderRadius: 7,
-    backgroundColor: '#e5e7eb',
     overflow: 'visible',
     position: 'relative',
-    // Gradient via multiple colored segments
-    background: 'linear-gradient(to right, #dc2626, #eab308, #16a34a)' as any,
+    flexDirection: 'row',
+  },
+  segment: {
+    flex: 1,
+    height: '100%' as any,
   },
   dot: {
     position: 'absolute',

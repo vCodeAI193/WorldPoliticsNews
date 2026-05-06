@@ -1,4 +1,16 @@
 import 'dotenv/config';
+
+const isDemoMode = process.env.DEMO_MODE === 'true';
+const requiredEnvVars = isDemoMode
+  ? ['JWT_SECRET', 'JWT_REFRESH_SECRET', 'DATABASE_URL']
+  : ['JWT_SECRET', 'JWT_REFRESH_SECRET', 'DATABASE_URL', 'ANTHROPIC_API_KEY', 'TAVILY_API_KEY'];
+
+const missingVars = requiredEnvVars.filter((v) => !process.env[v]);
+if (missingVars.length > 0) {
+  console.error(`Fehlende Umgebungsvariablen: ${missingVars.join(', ')}`);
+  process.exit(1);
+}
+
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';

@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { SearchBar } from '@/components/ui/SearchBar';
+import type { Entity } from '@wpn/shared-types';
 
 interface Props {
   searchParams: Promise<{ q?: string }>;
@@ -55,7 +56,7 @@ export default async function SuchePage({ searchParams }: Props) {
         <section className="mb-8">
           <h2 className="text-lg font-bold text-gray-900 mb-3">Politiker</h2>
           <div className="space-y-2">
-            {politicians.map((e: any) => (
+            {politicians.map((e: Entity) => (
               <Link
                 key={e.id}
                 href={`/politiker/${e.id}?name=${encodeURIComponent(e.name)}`}
@@ -76,7 +77,7 @@ export default async function SuchePage({ searchParams }: Props) {
         <section>
           <h2 className="text-lg font-bold text-gray-900 mb-3">Parteien</h2>
           <div className="space-y-2">
-            {parties.map((e: any) => (
+            {parties.map((e: Entity) => (
               <Link
                 key={e.id}
                 href={`/partei/${e.id}?name=${encodeURIComponent(e.name)}`}
