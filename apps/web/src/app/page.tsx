@@ -10,7 +10,28 @@ const FEATURED = [
   { name: 'SPD', id: 'Q49750', type: 'party', country: 'DE' },
 ];
 
-export default function HomePage() {
+const SENTIMENT_COLORS: Record<string, string> = {
+  'sehr positiv': 'text-green-700 bg-green-50',
+  'positiv': 'text-green-600 bg-green-50',
+  'neutral': 'text-gray-600 bg-gray-100',
+  'negativ': 'text-orange-600 bg-orange-50',
+  'sehr negativ': 'text-red-600 bg-red-50',
+};
+
+async function fetchTrending() {
+  const BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+  try {
+    const res = await fetch(`${BASE}/api/trending`, { next: { revalidate: 300 } });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.success ? data.data : [];
+  } catch {
+    return [];
+  }
+}
+
+export default async function HomePage() {
+  const trending = await fetchTrending();
   return (
     <div>
       {/* Hero */}
@@ -58,6 +79,27 @@ export default function HomePage() {
           ))}
         </div>
       </section>
+
+      {/* Trending – dynamic from DB */}
+      {trending.length > 0 && (
+        <section className="max-w-5xl mx-auto px-4 pb-12">
+          <h2 className="text-xl font-bold text-gray-900 mb-4">Zuletzt analysiert</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {trending.map((entity: { entityId: string; entityName: string; entityType: string; sentiment: number; sentimentLabel: string }) => (
+              <Link
+                key={entity.entityId}
+                href={`/${entity.entityType === 'party' ? 'partei' : 'politiker'}/${entity.entityId}?name=${encodeURIComponent(entity.entityName)}`}
+                className="bg-white rounded-xl border border-gray-200 p-3 hover:border-blue-400 hover:shadow-md transition-all"
+              >
+                <p className="font-semibold text-gray-900 text-sm truncate">{entity.entityName}</p>
+                <span className={`inline-block mt-1 text-xs px-2 py-0.5 rounded-full font-medium ${SENTIMENT_COLORS[entity.sentimentLabel] || 'text-gray-500 bg-gray-100'}`}>
+                  {entity.sentimentLabel}
+                </span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Featured entities */}
       <section className="max-w-5xl mx-auto px-4 pb-16">

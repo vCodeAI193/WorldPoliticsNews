@@ -24,6 +24,7 @@ import { webhooksRouter } from './routes/webhooks';
 import { politiciansRouter } from './routes/politicians';
 import { partiesRouter } from './routes/parties';
 import { subscriptionsRouter } from './routes/subscriptions';
+import { trendingRouter } from './routes/trending';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -63,6 +64,7 @@ app.use('/api/webhooks', webhooksRouter);
 app.use('/api/politicians', politiciansRouter);
 app.use('/api/parties', partiesRouter);
 app.use('/api/subscriptions', subscriptionsRouter);
+app.use('/api/trending', trendingRouter);
 
 app.get('/api/health', (_req, res) => res.json({ ok: true, timestamp: new Date().toISOString() }));
 

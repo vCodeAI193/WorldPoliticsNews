@@ -3,6 +3,7 @@ import { ArticleCard } from './ArticleCard';
 import { AdBanner } from './AdBanner';
 import { WatchlistButton } from './WatchlistButton';
 import { PlusUpgradeBanner } from './PlusUpgradeBanner';
+import { ShareButtons } from './ShareButtons';
 import type { AnalysisResult } from '@wpn/shared-types';
 
 interface Props {
@@ -47,6 +48,9 @@ export function EntityAnalysisPage({ id, entityName, analysis, entityType, adSlo
         <h2 className="text-lg font-bold text-gray-900 mb-4">Gesamtbewertung</h2>
         <SentimentGauge score={analysis.sentiment} label={analysis.sentimentLabel} size="lg" />
         <p className="mt-5 text-gray-700 leading-relaxed">{analysis.summary}</p>
+        <div className="mt-5 pt-4 border-t border-gray-100">
+          <ShareButtons entityName={analysis.entityName} sentimentLabel={analysis.sentimentLabel} />
+        </div>
       </section>
 
       <AdBanner slot={adSlot} />
