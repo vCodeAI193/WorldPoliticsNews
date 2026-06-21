@@ -1,4 +1,13 @@
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert, Linking } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+  Alert,
+  Linking,
+} from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuthStore } from '@/store/authStore';
 import { api } from '@/lib/api';
@@ -11,6 +20,13 @@ export default function KontoScreen() {
   const router = useRouter();
   const [purchasing, setPurchasing] = useState(false);
   const [restoring, setRestoring] = useState(false);
+
+  const [pwForm, setPwForm] = useState({ current: '', next: '', confirm: '' });
+  const [pwLoading, setPwLoading] = useState(false);
+
+  const [deletePassword, setDeletePassword] = useState('');
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   async function handleLogout() {
     try {
@@ -65,6 +81,39 @@ export default function KontoScreen() {
     }
   }
 
+  async function handleChangePassword() {
+    if (pwForm.next !== pwForm.confirm) {
+      Alert.alert('Fehler', 'Neue Passwörter stimmen nicht überein.');
+      return;
+    }
+    if (pwForm.next.length < 8) {
+      Alert.alert('Fehler', 'Neues Passwort muss mindestens 8 Zeichen haben.');
+      return;
+    }
+    setPwLoading(true);
+    try {
+      await api.users.changePassword(pwForm.current, pwForm.next);
+      Alert.alert('Erledigt', 'Passwort erfolgreich geändert.');
+      setPwForm({ current: '', next: '', confirm: '' });
+    } catch (err: any) {
+      Alert.alert('Fehler', err.message || 'Passwort konnte nicht geändert werden.');
+    } finally {
+      setPwLoading(false);
+    }
+  }
+
+  async function handleDeleteAccount() {
+    setDeleteLoading(true);
+    try {
+      await api.users.deleteAccount(deletePassword);
+      await clearTokens();
+      setUser(null);
+    } catch (err: any) {
+      Alert.alert('Fehler', err.message || 'Konto konnte nicht gelöscht werden.');
+      setDeleteLoading(false);
+    }
+  }
+
   if (!user) {
     return (
       <View style={styles.center}>
@@ -94,6 +143,15 @@ export default function KontoScreen() {
             {isPlus() ? '⭐ WorldPoliticsNews Plus' : 'Kostenlos'}
           </Text>
         </View>
+        <View style={styles.divider} />
+        <Text style={styles.label}>Registriert seit</Text>
+        <Text style={styles.value}>
+          {new Date(user.createdAt).toLocaleDateString('de-DE', {
+            day: '2-digit',
+            month: 'long',
+            year: 'numeric',
+          })}
+        </Text>
       </View>
 
       {/* Upgrade / Manage */}
@@ -148,9 +206,88 @@ export default function KontoScreen() {
         ))}
       </View>
 
+      {/* Change Password */}
+      <View style={styles.card}>
+        <Text style={styles.sectionTitle}>Passwort ändern</Text>
+        <TextInput
+          style={styles.pwInput}
+          placeholder="Aktuelles Passwort"
+          placeholderTextColor="#9ca3af"
+          secureTextEntry
+          value={pwForm.current}
+          onChangeText={(v) => setPwForm({ ...pwForm, current: v })}
+        />
+        <TextInput
+          style={styles.pwInput}
+          placeholder="Neues Passwort (min. 8 Zeichen)"
+          placeholderTextColor="#9ca3af"
+          secureTextEntry
+          value={pwForm.next}
+          onChangeText={(v) => setPwForm({ ...pwForm, next: v })}
+        />
+        <TextInput
+          style={[styles.pwInput, { marginBottom: 12 }]}
+          placeholder="Neues Passwort bestätigen"
+          placeholderTextColor="#9ca3af"
+          secureTextEntry
+          value={pwForm.confirm}
+          onChangeText={(v) => setPwForm({ ...pwForm, confirm: v })}
+        />
+        <TouchableOpacity
+          style={[styles.changePwBtn, (pwLoading || !pwForm.current || !pwForm.next || !pwForm.confirm) && styles.disabled]}
+          onPress={handleChangePassword}
+          disabled={pwLoading || !pwForm.current || !pwForm.next || !pwForm.confirm}
+        >
+          <Text style={styles.changePwBtnText}>
+            {pwLoading ? 'Wird geändert...' : 'Passwort ändern'}
+          </Text>
+        </TouchableOpacity>
+      </View>
+
       <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
         <Text style={styles.logoutText}>Abmelden</Text>
       </TouchableOpacity>
+
+      {/* Delete Account */}
+      <View style={[styles.card, styles.deleteCard]}>
+        <Text style={[styles.sectionTitle, { color: '#ef4444' }]}>Konto löschen</Text>
+        <Text style={styles.deleteHint}>
+          Löscht dein Konto und alle Daten unwiderruflich.
+        </Text>
+        {!deleteConfirm ? (
+          <TouchableOpacity onPress={() => setDeleteConfirm(true)}>
+            <Text style={styles.deleteLinkText}>Konto löschen →</Text>
+          </TouchableOpacity>
+        ) : (
+          <>
+            <TextInput
+              style={[styles.pwInput, { borderColor: '#fca5a5' }]}
+              placeholder="Passwort zur Bestätigung"
+              placeholderTextColor="#9ca3af"
+              secureTextEntry
+              value={deletePassword}
+              onChangeText={setDeletePassword}
+            />
+            <View style={{ flexDirection: 'row', gap: 8, marginTop: 4 }}>
+              <TouchableOpacity
+                style={[styles.cancelBtn, { flex: 1 }]}
+                onPress={() => { setDeleteConfirm(false); setDeletePassword(''); }}
+              >
+                <Text style={styles.cancelBtnText}>Abbrechen</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.deleteConfirmBtn, { flex: 1 }, (deleteLoading || !deletePassword) && styles.disabled]}
+                onPress={handleDeleteAccount}
+                disabled={deleteLoading || !deletePassword}
+              >
+                <Text style={styles.deleteConfirmBtnText}>
+                  {deleteLoading ? '...' : 'Endgültig löschen'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </>
+        )}
+      </View>
     </ScrollView>
   );
 }
@@ -202,10 +339,28 @@ const styles = StyleSheet.create({
   secondaryBtnText: { color: '#fff', fontWeight: '600', fontSize: 14 },
   restoreBtn: { marginTop: 12, alignItems: 'center' },
   restoreText: { color: 'rgba(255,255,255,0.7)', fontSize: 13 },
-  disabled: { opacity: 0.6 },
+  disabled: { opacity: 0.5 },
   activeLabel: { fontSize: 14, color: '#15803d', fontWeight: '600', marginBottom: 12 },
   sectionTitle: { fontSize: 14, fontWeight: '700', color: '#374151', marginBottom: 10 },
   featureItem: { fontSize: 14, color: '#4b5563', marginBottom: 6 },
+  pwInput: {
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 14,
+    color: '#111827',
+    backgroundColor: '#fff',
+    marginBottom: 8,
+  },
+  changePwBtn: {
+    backgroundColor: '#1a56db',
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  changePwBtnText: { color: '#fff', fontWeight: '700', fontSize: 14 },
   logoutBtn: {
     margin: 16,
     marginTop: 24,
@@ -216,4 +371,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   logoutText: { color: '#ef4444', fontWeight: '600', fontSize: 15 },
+  deleteCard: { borderColor: '#fecaca', marginTop: 16 },
+  deleteHint: { fontSize: 13, color: '#6b7280', marginBottom: 10 },
+  deleteLinkText: { color: '#ef4444', fontSize: 14 },
+  cancelBtn: {
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    borderRadius: 8,
+    padding: 10,
+    alignItems: 'center',
+  },
+  cancelBtnText: { color: '#374151', fontSize: 14 },
+  deleteConfirmBtn: {
+    backgroundColor: '#ef4444',
+    borderRadius: 8,
+    padding: 10,
+    alignItems: 'center',
+  },
+  deleteConfirmBtnText: { color: '#fff', fontSize: 14, fontWeight: '600' },
 });

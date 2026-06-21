@@ -1,6 +1,15 @@
 import { useEffect, useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
-import { useLocalSearchParams, useNavigation } from 'expo-router';
+import {
+  View,
+  Text,
+  ScrollView,
+  StyleSheet,
+  ActivityIndicator,
+  TouchableOpacity,
+  Alert,
+  Share,
+} from 'react-native';
+import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import { api } from '@/lib/api';
 import { SentimentGauge } from '@/components/SentimentGauge';
 import { ArticleCard } from '@/components/ArticleCard';
@@ -11,9 +20,12 @@ import { useAuthStore } from '@/store/authStore';
 export default function PoliticianDetailScreen() {
   const { id, name } = useLocalSearchParams<{ id: string; name?: string }>();
   const navigation = useNavigation();
+  const router = useRouter();
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [watchlistItemId, setWatchlistItemId] = useState<string | null>(null);
+  const [watchlistLoading, setWatchlistLoading] = useState(false);
   const { user } = useAuthStore();
   const entityName = name || id;
 
@@ -25,6 +37,46 @@ export default function PoliticianDetailScreen() {
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
   }, [id, entityName, navigation]);
+
+  useEffect(() => {
+    if (!user) return;
+    api.watchlist.get().then((items) => {
+      const found = items.find((i) => i.entityId === id);
+      if (found) setWatchlistItemId(found.id);
+    }).catch(() => {});
+  }, [user, id]);
+
+  async function handleWatchlist() {
+    if (!user) { router.push('/auth/login'); return; }
+    setWatchlistLoading(true);
+    try {
+      if (watchlistItemId) {
+        await api.watchlist.remove(watchlistItemId);
+        setWatchlistItemId(null);
+      } else {
+        const item = await api.watchlist.add({
+          entityId: id,
+          entityName: entityName,
+          entityType: 'politician',
+        });
+        setWatchlistItemId(item.id);
+      }
+    } catch (e: any) {
+      Alert.alert('Fehler', e.message || 'Aktion fehlgeschlagen');
+    } finally {
+      setWatchlistLoading(false);
+    }
+  }
+
+  async function handleShare() {
+    if (!analysis) return;
+    try {
+      await Share.share({
+        title: `KI-Analyse: ${analysis.entityName}`,
+        message: `KI-Analyse zu ${analysis.entityName}: Sentiment „${analysis.sentimentLabel}" – WorldPoliticsNews\nhttps://worldpoliticsnews.de/politiker/${id}?name=${encodeURIComponent(analysis.entityName)}`,
+      });
+    } catch {}
+  }
 
   if (loading) {
     return (
@@ -58,6 +110,20 @@ export default function PoliticianDetailScreen() {
           })}
           {analysis.cached ? ' (Cache)' : ''}
         </Text>
+        <View style={styles.headerActions}>
+          <TouchableOpacity
+            style={[styles.actionBtn, watchlistItemId && styles.actionBtnActive]}
+            onPress={handleWatchlist}
+            disabled={watchlistLoading}
+          >
+            <Text style={styles.actionBtnText}>
+              {watchlistItemId ? '★ Beobachtet' : '☆ Beobachten'}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.actionBtn} onPress={handleShare}>
+            <Text style={styles.actionBtnText}>↑ Teilen</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Sentiment */}
@@ -116,6 +182,27 @@ const styles = StyleSheet.create({
   entityType: { color: '#bfdbfe', fontSize: 13, marginBottom: 4 },
   entityName: { color: '#fff', fontSize: 26, fontWeight: '800' },
   metaText: { color: '#93c5fd', fontSize: 12, marginTop: 4 },
+  headerActions: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 12,
+  },
+  actionBtn: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.4)',
+  },
+  actionBtnActive: {
+    backgroundColor: 'rgba(255,255,255,0.35)',
+  },
+  actionBtnText: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: '600',
+  },
   card: {
     backgroundColor: '#fff',
     margin: 16,

@@ -61,6 +61,27 @@ export const api = {
   },
   users: {
     me: () => apiFetch<UserPublic>('/api/users/me'),
+    changePassword: (currentPassword: string, newPassword: string) =>
+      apiFetch<null>('/api/users/me/password', {
+        method: 'PUT',
+        body: JSON.stringify({ currentPassword, newPassword }),
+      }),
+    deleteAccount: (password: string) =>
+      apiFetch<null>('/api/users/me', {
+        method: 'DELETE',
+        body: JSON.stringify({ password }),
+      }),
+  },
+  trending: {
+    get: () =>
+      apiFetch<Array<{
+        entityId: string;
+        entityName: string;
+        entityType: string;
+        sentiment: number;
+        sentimentLabel: string;
+        generatedAt: string;
+      }>>('/api/trending'),
   },
   subscriptions: {
     createCheckout: () => apiFetch<{ url: string }>('/api/subscriptions/create-checkout', { method: 'POST' }),

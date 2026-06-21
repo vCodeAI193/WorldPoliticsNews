@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -23,12 +23,36 @@ const FEATURED: Entity[] = [
   { id: 'Q49750', name: 'SPD', type: 'party', country: 'DE' },
 ];
 
+const SENTIMENT_COLORS: Record<string, string> = {
+  'sehr positiv': '#15803d',
+  'positiv': '#16a34a',
+  'neutral': '#4b5563',
+  'negativ': '#ea580c',
+  'sehr negativ': '#dc2626',
+};
+
 export default function HomeScreen() {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Entity[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
+  const [trending, setTrending] = useState<Array<{
+    entityId: string;
+    entityName: string;
+    entityType: string;
+    sentiment: number;
+    sentimentLabel: string;
+  }>>([]);
+  const [trendingLoading, setTrendingLoading] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    setTrendingLoading(true);
+    api.trending.get()
+      .then(setTrending)
+      .catch(() => {})
+      .finally(() => setTrendingLoading(false));
+  }, []);
 
   async function handleSearch() {
     if (query.trim().length < 2) return;
@@ -110,6 +134,45 @@ export default function HomeScreen() {
         />
       ) : (
         <ScrollView contentContainerStyle={{ paddingBottom: 24 }}>
+          {/* Trending section */}
+          {(trendingLoading || trending.length > 0) && (
+            <>
+              <Text style={styles.sectionTitle}>Zuletzt analysiert</Text>
+              {trendingLoading ? (
+                <ActivityIndicator size="small" color="#1a56db" style={{ marginVertical: 12 }} />
+              ) : (
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={{ paddingHorizontal: 16, gap: 8, paddingBottom: 4 }}
+                >
+                  {trending.map((entity) => (
+                    <TouchableOpacity
+                      key={entity.entityId}
+                      style={styles.trendingChip}
+                      onPress={() => navigate({
+                        id: entity.entityId,
+                        name: entity.entityName,
+                        type: entity.entityType as 'politician' | 'party',
+                        country: '',
+                      })}
+                    >
+                      <Text style={styles.trendingName} numberOfLines={1}>
+                        {entity.entityName}
+                      </Text>
+                      <Text style={[
+                        styles.trendingLabel,
+                        { color: SENTIMENT_COLORS[entity.sentimentLabel] || '#4b5563' },
+                      ]}>
+                        {entity.sentimentLabel}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              )}
+            </>
+          )}
+
           <Text style={styles.sectionTitle}>Beliebte Suchen</Text>
           {FEATURED.map((entity) => (
             <TouchableOpacity
@@ -173,6 +236,25 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 8,
+  },
+  trendingChip: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    padding: 12,
+    minWidth: 120,
+    maxWidth: 160,
+  },
+  trendingName: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#111827',
+    marginBottom: 4,
+  },
+  trendingLabel: {
+    fontSize: 11,
+    fontWeight: '500',
   },
   resultItem: {
     flexDirection: 'row',
