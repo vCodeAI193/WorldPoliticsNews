@@ -9,9 +9,9 @@ const FREE_WATCHLIST_LIMIT = 5;
 
 const addItemSchema = z.object({
   entityType: z.enum(['politician', 'party']),
-  entityId: z.string().min(1),
-  entityName: z.string().min(1),
-  entityCountry: z.string().optional(),
+  entityId: z.string().min(1).max(64).regex(/^[\w\-]+$/),
+  entityName: z.string().min(1).max(256),
+  entityCountry: z.string().max(64).optional(),
 });
 
 watchlistRouter.get('/', requireAuth, async (req: AuthRequest, res) => {

@@ -28,8 +28,8 @@ usersRouter.put('/me/password', requireAuth, async (req: AuthRequest, res) => {
     return res.status(400).json({ success: false, error: 'Aktuelles und neues Passwort erforderlich' });
   }
 
-  if (newPassword.length < 8) {
-    return res.status(400).json({ success: false, error: 'Neues Passwort muss mindestens 8 Zeichen haben' });
+  if (newPassword.length < 8 || newPassword.length > 128 || currentPassword.length > 128) {
+    return res.status(400).json({ success: false, error: 'Passwort muss 8–128 Zeichen lang sein' });
   }
 
   const user = await prisma.user.findUnique({ where: { id: req.user!.id } });
@@ -49,8 +49,8 @@ usersRouter.put('/me/password', requireAuth, async (req: AuthRequest, res) => {
 usersRouter.delete('/me', requireAuth, async (req: AuthRequest, res) => {
   const { password } = req.body as { password?: string };
 
-  if (!password) {
-    return res.status(400).json({ success: false, error: 'Passwort zur Bestätigung erforderlich' });
+  if (!password || password.length > 128) {
+    return res.status(400).json({ success: false, error: 'Passwort zur Bestätigung erforderlich (max. 128 Zeichen)' });
   }
 
   const user = await prisma.user.findUnique({ where: { id: req.user!.id } });

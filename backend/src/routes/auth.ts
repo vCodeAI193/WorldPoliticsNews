@@ -7,6 +7,10 @@ import { TOKEN_TTL } from '../constants';
 
 export const authRouter = Router();
 
+// Pre-hashed dummy used to run bcrypt.compare even when a user is not found,
+// preventing timing-based user enumeration on the login endpoint.
+const DUMMY_HASH = bcrypt.hashSync('_timing_nonce_', 10);
+
 const credentialsSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8).max(72),
@@ -64,7 +68,8 @@ authRouter.post('/login', async (req, res) => {
   const { email, password } = result.data;
 
   const user = await prisma.user.findUnique({ where: { email } });
-  if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
+  const passwordValid = await bcrypt.compare(password, user?.passwordHash ?? DUMMY_HASH);
+  if (!user || !passwordValid) {
     return res.status(401).json({ success: false, error: 'Ungültige Zugangsdaten' });
   }
 

@@ -25,8 +25,8 @@ export function createEntityRouter(
   router.get('/search', async (req, res) => {
     const { q, country } = req.query as { q?: string; country?: string };
 
-    if (!q || q.trim().length < 2) {
-      return res.status(400).json({ success: false, error: 'Suchbegriff muss mindestens 2 Zeichen lang sein' });
+    if (!q || q.trim().length < 2 || q.length > 200) {
+      return res.status(400).json({ success: false, error: 'Suchbegriff muss 2–200 Zeichen lang sein' });
     }
 
     if (isDemoMode) {
@@ -50,8 +50,12 @@ export function createEntityRouter(
     const { id } = req.params;
     const { name } = req.query as { name?: string };
 
-    if (!name?.trim()) {
-      return res.status(400).json({ success: false, error: 'Parameter "name" ist erforderlich' });
+    if (!name?.trim() || name.length > 256) {
+      return res.status(400).json({ success: false, error: 'Parameter "name" ist erforderlich (max. 256 Zeichen)' });
+    }
+
+    if (!/^[\w\s\-./äöüßÄÖÜ]+$/u.test(id) || id.length > 64) {
+      return res.status(400).json({ success: false, error: 'Ungültige Entitäts-ID' });
     }
 
     if (isDemoMode) {

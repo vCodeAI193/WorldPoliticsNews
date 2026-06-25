@@ -11,6 +11,11 @@ if (missingVars.length > 0) {
   process.exit(1);
 }
 
+if ((process.env.JWT_SECRET?.length ?? 0) < 32 || (process.env.JWT_REFRESH_SECRET?.length ?? 0) < 32) {
+  console.error('JWT_SECRET und JWT_REFRESH_SECRET müssen mindestens 32 Zeichen lang sein');
+  process.exit(1);
+}
+
 import express from 'express';
 import { RATE_LIMIT } from './constants';
 import cors from 'cors';
@@ -43,7 +48,7 @@ app.use(
 
 // Stripe webhooks require raw body BEFORE json middleware
 app.use('/api/webhooks', express.raw({ type: 'application/json' }));
-app.use(express.json());
+app.use(express.json({ limit: '10kb' }));
 
 // Global rate limit
 const globalLimiter = rateLimit({

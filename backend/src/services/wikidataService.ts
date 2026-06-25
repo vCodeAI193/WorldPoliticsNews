@@ -47,6 +47,10 @@ export async function searchWikidata(
 }
 
 export async function getEntityDetails(wikidataId: string): Promise<Partial<Entity> | null> {
+  if (!/^Q\d+$/.test(wikidataId)) {
+    return null;
+  }
+
   const sparql = `
     SELECT ?label ?countryCode ?image WHERE {
       wd:${wikidataId} rdfs:label ?label .
