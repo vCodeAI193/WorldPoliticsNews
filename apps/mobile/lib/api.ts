@@ -1,6 +1,6 @@
 import Constants from 'expo-constants';
 import { getAccessToken, refreshAccessToken } from './auth';
-import type { ApiResponse, AnalysisResult, SearchResult, WatchlistItem, UserPublic } from '@wpn/shared-types';
+import type { ApiResponse, AnalysisResult, SearchResult, TrendingEntity, WatchlistItem, UserPublic } from '@wpn/shared-types';
 
 const BASE: string = Constants.expoConfig?.extra?.API_URL || 'http://localhost:3001';
 
@@ -26,19 +26,19 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   return (data as any).data;
 }
 
+function entityApi(type: 'politician' | 'party') {
+  const plural = type === 'politician' ? 'politicians' : 'parties';
+  return {
+    search: (q: string) =>
+      apiFetch<SearchResult>(`/api/${plural}/search?q=${encodeURIComponent(q)}`),
+    analysis: (id: string, name: string) =>
+      apiFetch<AnalysisResult>(`/api/${plural}/${id}/analysis?name=${encodeURIComponent(name)}`),
+  };
+}
+
 export const api = {
-  politicians: {
-    search: (q: string) =>
-      apiFetch<SearchResult>(`/api/politicians/search?q=${encodeURIComponent(q)}`),
-    analysis: (id: string, name: string) =>
-      apiFetch<AnalysisResult>(`/api/politicians/${id}/analysis?name=${encodeURIComponent(name)}`),
-  },
-  parties: {
-    search: (q: string) =>
-      apiFetch<SearchResult>(`/api/parties/search?q=${encodeURIComponent(q)}`),
-    analysis: (id: string, name: string) =>
-      apiFetch<AnalysisResult>(`/api/parties/${id}/analysis?name=${encodeURIComponent(name)}`),
-  },
+  politicians: entityApi('politician'),
+  parties: entityApi('party'),
   watchlist: {
     get: () => apiFetch<WatchlistItem[]>('/api/watchlist'),
     add: (item: Omit<WatchlistItem, 'id' | 'createdAt'>) =>
@@ -73,15 +73,7 @@ export const api = {
       }),
   },
   trending: {
-    get: () =>
-      apiFetch<Array<{
-        entityId: string;
-        entityName: string;
-        entityType: string;
-        sentiment: number;
-        sentimentLabel: string;
-        generatedAt: string;
-      }>>('/api/trending'),
+    get: () => apiFetch<TrendingEntity[]>('/api/trending'),
   },
   subscriptions: {
     createCheckout: () => apiFetch<{ url: string }>('/api/subscriptions/create-checkout', { method: 'POST' }),

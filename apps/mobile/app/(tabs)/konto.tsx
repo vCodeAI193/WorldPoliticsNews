@@ -37,14 +37,18 @@ export default function KontoScreen() {
     } catch {}
   }
 
+  async function refreshUser() {
+    const fresh = await api.users.me();
+    setUser(fresh);
+  }
+
   async function handleUpgrade() {
     if (!user) { router.push('/auth/registrieren'); return; }
     setPurchasing(true);
     try {
       const success = await purchasePlus();
       if (success) {
-        const fresh = await api.users.me();
-        setUser(fresh);
+        await refreshUser();
         Alert.alert('Danke!', 'Du hast WorldPoliticsNews Plus aktiviert. Genieße die werbefreie Erfahrung!');
       }
     } catch (err: any) {
@@ -59,8 +63,7 @@ export default function KontoScreen() {
     try {
       const ok = await restorePurchases();
       if (ok) {
-        const fresh = await api.users.me();
-        setUser(fresh);
+        await refreshUser();
         Alert.alert('Erledigt', 'Deine Käufe wurden wiederhergestellt.');
       } else {
         Alert.alert('Kein aktives Abo', 'Es wurden keine früheren Käufe gefunden.');
@@ -110,6 +113,7 @@ export default function KontoScreen() {
       setUser(null);
     } catch (err: any) {
       Alert.alert('Fehler', err.message || 'Konto konnte nicht gelöscht werden.');
+    } finally {
       setDeleteLoading(false);
     }
   }
@@ -129,6 +133,8 @@ export default function KontoScreen() {
       </View>
     );
   }
+
+  const isPwDisabled = pwLoading || !pwForm.current || !pwForm.next || !pwForm.confirm;
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
@@ -234,9 +240,9 @@ export default function KontoScreen() {
           onChangeText={(v) => setPwForm({ ...pwForm, confirm: v })}
         />
         <TouchableOpacity
-          style={[styles.changePwBtn, (pwLoading || !pwForm.current || !pwForm.next || !pwForm.confirm) && styles.disabled]}
+          style={[styles.changePwBtn, isPwDisabled && styles.disabled]}
           onPress={handleChangePassword}
-          disabled={pwLoading || !pwForm.current || !pwForm.next || !pwForm.confirm}
+          disabled={isPwDisabled}
         >
           <Text style={styles.changePwBtnText}>
             {pwLoading ? 'Wird geändert...' : 'Passwort ändern'}
@@ -268,7 +274,7 @@ export default function KontoScreen() {
               value={deletePassword}
               onChangeText={setDeletePassword}
             />
-            <View style={{ flexDirection: 'row', gap: 8, marginTop: 4 }}>
+            <View style={styles.deleteActionRow}>
               <TouchableOpacity
                 style={[styles.cancelBtn, { flex: 1 }]}
                 onPress={() => { setDeleteConfirm(false); setDeletePassword(''); }}
@@ -374,6 +380,7 @@ const styles = StyleSheet.create({
   deleteCard: { borderColor: '#fecaca', marginTop: 16 },
   deleteHint: { fontSize: 13, color: '#6b7280', marginBottom: 10 },
   deleteLinkText: { color: '#ef4444', fontSize: 14 },
+  deleteActionRow: { flexDirection: 'row', gap: 8, marginTop: 4 },
   cancelBtn: {
     borderWidth: 1,
     borderColor: '#d1d5db',

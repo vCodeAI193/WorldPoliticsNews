@@ -68,6 +68,16 @@ export interface WatchlistItem {
   createdAt: string;
 }
 
+// Trending
+export interface TrendingEntity {
+  entityId: string;
+  entityName: string;
+  entityType: 'politician' | 'party';
+  sentiment: number;
+  sentimentLabel: SentimentLabel;
+  generatedAt: string;
+}
+
 // API response wrappers
 export interface ApiSuccess<T> {
   success: true;

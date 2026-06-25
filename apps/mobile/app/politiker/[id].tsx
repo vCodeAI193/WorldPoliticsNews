@@ -31,20 +31,21 @@ export default function PoliticianDetailScreen() {
 
   useEffect(() => {
     navigation.setOptions({ title: entityName });
-    api.politicians
+    const fetchAnalysis = api.politicians
       .analysis(id, entityName)
       .then(setAnalysis)
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
-  }, [id, entityName, navigation]);
 
-  useEffect(() => {
-    if (!user) return;
-    api.watchlist.get().then((items) => {
-      const found = items.find((i) => i.entityId === id);
-      if (found) setWatchlistItemId(found.id);
-    }).catch(() => {});
-  }, [user, id]);
+    const fetchWatchlist = user
+      ? api.watchlist.get().then((items) => {
+          const found = items.find((i) => i.entityId === id);
+          if (found) setWatchlistItemId(found.id);
+        }).catch(() => {})
+      : Promise.resolve();
+
+    Promise.allSettled([fetchAnalysis, fetchWatchlist]);
+  }, [id, entityName, navigation, user]);
 
   async function handleWatchlist() {
     if (!user) { router.push('/auth/login'); return; }
@@ -159,12 +160,12 @@ export default function PoliticianDetailScreen() {
         ))}
       </View>
 
-      {!user?.subscriptionTier || user.subscriptionTier === 'free' ? (
+      {user?.subscriptionTier !== 'plus' && (
         <View style={styles.upgradeBanner}>
           <Text style={styles.upgradeTitle}>⭐ Plus – Werbefrei & schnellere Updates</Text>
           <Text style={styles.upgradeHint}>3,99 € / Monat → Konto-Tab</Text>
         </View>
-      ) : null}
+      )}
     </ScrollView>
   );
 }

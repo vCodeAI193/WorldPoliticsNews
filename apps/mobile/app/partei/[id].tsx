@@ -31,20 +31,21 @@ export default function PartyDetailScreen() {
 
   useEffect(() => {
     navigation.setOptions({ title: entityName });
-    api.parties
+    const fetchAnalysis = api.parties
       .analysis(id, entityName)
       .then(setAnalysis)
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
-  }, [id, entityName, navigation]);
 
-  useEffect(() => {
-    if (!user) return;
-    api.watchlist.get().then((items) => {
-      const found = items.find((i) => i.entityId === id);
-      if (found) setWatchlistItemId(found.id);
-    }).catch(() => {});
-  }, [user, id]);
+    const fetchWatchlist = user
+      ? api.watchlist.get().then((items) => {
+          const found = items.find((i) => i.entityId === id);
+          if (found) setWatchlistItemId(found.id);
+        }).catch(() => {})
+      : Promise.resolve();
+
+    Promise.allSettled([fetchAnalysis, fetchWatchlist]);
+  }, [id, entityName, navigation, user]);
 
   async function handleWatchlist() {
     if (!user) { router.push('/auth/login'); return; }

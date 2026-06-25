@@ -12,7 +12,7 @@ import {
 import { useRouter } from 'expo-router';
 import { api } from '@/lib/api';
 import { AdBanner } from '@/components/AdBanner';
-import type { Entity } from '@wpn/shared-types';
+import type { Entity, TrendingEntity } from '@wpn/shared-types';
 
 const FEATURED: Entity[] = [
   { id: 'Q567', name: 'Friedrich Merz', type: 'politician', country: 'DE' },
@@ -36,13 +36,7 @@ export default function HomeScreen() {
   const [results, setResults] = useState<Entity[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
-  const [trending, setTrending] = useState<Array<{
-    entityId: string;
-    entityName: string;
-    entityType: string;
-    sentiment: number;
-    sentimentLabel: string;
-  }>>([]);
+  const [trending, setTrending] = useState<TrendingEntity[]>([]);
   const [trendingLoading, setTrendingLoading] = useState(false);
   const router = useRouter();
 
@@ -55,13 +49,14 @@ export default function HomeScreen() {
   }, []);
 
   async function handleSearch() {
-    if (query.trim().length < 2) return;
+    const trimmed = query.trim();
+    if (trimmed.length < 2) return;
     setLoading(true);
     setSearched(true);
     try {
       const [politicians, parties] = await Promise.allSettled([
-        api.politicians.search(query.trim()),
-        api.parties.search(query.trim()),
+        api.politicians.search(trimmed),
+        api.parties.search(trimmed),
       ]);
       const all: Entity[] = [
         ...(politicians.status === 'fulfilled' ? politicians.value.entities : []),
