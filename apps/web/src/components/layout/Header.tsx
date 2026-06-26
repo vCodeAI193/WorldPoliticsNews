@@ -29,9 +29,14 @@ export function Header() {
             Suche
           </Link>
           {user && (
-            <Link href="/beobachtungsliste" className="text-gray-600 hover:text-blue-700 font-medium">
-              Beobachtungsliste
-            </Link>
+            <>
+              <Link href="/beobachtungsliste" className="text-gray-600 hover:text-blue-700 font-medium">
+                Beobachtungsliste
+              </Link>
+              <Link href="/meine-vergleiche" className="text-gray-600 hover:text-blue-700 font-medium">
+                Meine Vergleiche
+              </Link>
+            </>
           )}
           <Link href="/preise" className="text-gray-600 hover:text-blue-700 font-medium">
             Plus

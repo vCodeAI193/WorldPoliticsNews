@@ -1,6 +1,10 @@
-export const metadata = {
-  title: 'Datenschutzerkläung – WorldPoliticsNews',
-};
+import { createMetadata } from '@/lib/metadata';
+
+export const metadata = createMetadata(
+  'Datenschutzerklärung - WorldPoliticsNews',
+  'Informationen zum Datenschutz und zur Verarbeitung deiner Daten bei WorldPoliticsNews.',
+  { url: '/datenschutz' }
+);
 
 export default function DatenschutzPage() {
   return (

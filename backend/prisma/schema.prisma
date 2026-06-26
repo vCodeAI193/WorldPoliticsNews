@@ -24,6 +24,7 @@ model User {
   notifications                Notification[]
   newsletterSubscription       NewsletterSubscription?
   comparisonHistory            ComparisonHistory[]
+  adminProfile                 Admin?
   createdAt                    DateTime        @default(now())
   updatedAt                    DateTime        @updatedAt
 }
@@ -134,4 +135,26 @@ model ComparisonHistory {
   updatedAt   DateTime @updatedAt
 
   @@index([userId, createdAt])
+}
+
+model Admin {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      String   @default("moderator") // moderator, admin
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model BlockedEntity {
+  id        String   @id @default(cuid())
+  entityId  String
+  entityType String
+  reason    String
+  blockedAt DateTime @default(now())
+  blockedBy String
+
+  @@unique([entityId, entityType])
+  @@index([entityType])
 }

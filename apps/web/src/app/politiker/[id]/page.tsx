@@ -1,4 +1,6 @@
+import type { Metadata } from 'next';
 import { EntityAnalysisPage } from '@/components/ui/EntityAnalysisPage';
+import { createMetadata } from '@/lib/metadata';
 import type { AnalysisResult } from '@wpn/shared-types';
 
 interface Props {
@@ -29,6 +31,27 @@ async function fetchHistory(id: string) {
   } catch {
     return [];
   }
+}
+
+export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
+  const { id } = await params;
+  const { name } = await searchParams;
+  const BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+
+  try {
+    const res = await fetch(`${BASE}/api/politicians/${id}/analysis?name=${encodeURIComponent(name || id)}`);
+    if (res.ok) {
+      const data = await res.json();
+      const analysis = data.data;
+      return createMetadata(
+        `${name} - Medienanalyse | WorldPoliticsNews`,
+        analysis.summary.slice(0, 160),
+        { url: `/politiker/${id}` }
+      );
+    }
+  } catch {}
+
+  return createMetadata(`${name} - WorldPoliticsNews`, 'Medienanalyse zu diesem Politiker', { url: `/politiker/${id}` });
 }
 
 export default async function PoliticianPage({ params, searchParams }: Props) {

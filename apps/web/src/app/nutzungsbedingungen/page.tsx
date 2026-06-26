@@ -1,6 +1,10 @@
-export const metadata = {
-  title: 'Nutzungsbedingungen – WorldPoliticsNews',
-};
+import { createMetadata } from '@/lib/metadata';
+
+export const metadata = createMetadata(
+  'Nutzungsbedingungen - WorldPoliticsNews',
+  'Lies die Nutzungsbedingungen für WorldPoliticsNews und erfahre, wie die Plattform funktioniert.',
+  { url: '/nutzungsbedingungen' }
+);
 
 export default function NutzungsbedingungenPage() {
   return (

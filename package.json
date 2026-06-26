@@ -22,8 +22,10 @@
     "node": ">=22"
   },
   "dependencies": {
+    "@sentry/nextjs": "^10.62.0",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "swagger-ui-express": "^5.0.1"
   },
   "overrides": {
     "react": "^19.0.0",

@@ -1,0 +1,243 @@
+PHASE B – USER RETENTION IMPLEMENTATION
+File Summary & Checklist
+=============================================
+
+Generated: 2026-06-26
+
+FRONTEND COMPONENTS CREATED
+===========================
+
+1. NotificationBell Component
+   Path: /home/user/WorldPoliticsNews/apps/web/src/components/ui/NotificationBell.tsx
+   Size: ~1.2 KB
+   Purpose: Display notification bell icon with unread count badge in header
+   Dependencies: useAuthStore, fetch API, Next.js Link
+
+2. Notifications Page
+   Path: /home/user/WorldPoliticsNews/apps/web/src/app/benachrichtigungen/page.tsx
+   Size: ~2.4 KB
+   Purpose: Full notifications dashboard showing all user notifications
+   Route: /benachrichtigungen
+   Dependencies: useAuthStore, useRouter, useEffect
+
+3. Newsletter Preferences Component
+   Path: /home/user/WorldPoliticsNews/apps/web/src/components/ui/NewsletterPreferences.tsx
+   Size: ~2.0 KB
+   Purpose: Manage newsletter subscription and frequency settings
+   Dependencies: useAuthStore, fetch API
+   Integrated: /apps/web/src/app/konto/page.tsx
+
+4. Comparison History Page
+   Path: /home/user/WorldPoliticsNews/apps/web/src/app/meine-vergleiche/page.tsx
+   Size: ~3.2 KB
+   Purpose: View, manage, and load saved comparisons
+   Route: /meine-vergleiche
+   Dependencies: useAuthStore, useRouter, useEffect
+
+BACKEND ROUTES CREATED
+======================
+
+5. Notifications Router
+   Path: /home/user/WorldPoliticsNews/backend/src/routes/notifications.ts
+   Size: ~1.8 KB
+   Endpoints:
+   - GET    /api/notifications
+   - PATCH  /api/notifications/:id/read
+   - DELETE /api/notifications/:id
+   Dependencies: Express, Prisma, Auth middleware
+
+6. Newsletter Router
+   Path: /home/user/WorldPoliticsNews/backend/src/routes/newsletter.ts
+   Size: ~2.1 KB
+   Endpoints:
+   - GET    /api/newsletter/preferences
+   - PUT    /api/newsletter/preferences
+   Dependencies: Express, Prisma, Zod, Auth middleware
+
+7. Comparisons Router
+   Path: /home/user/WorldPoliticsNews/backend/src/routes/comparisons.ts
+   Size: ~2.5 KB
+   Endpoints:
+   - GET    /api/comparisons
+   - POST   /api/comparisons
+   - DELETE /api/comparisons/:id
+   Dependencies: Express, Prisma, Zod, Auth middleware
+
+BACKEND SERVICES CREATED
+========================
+
+8. Notification Service
+   Path: /home/user/WorldPoliticsNews/backend/src/services/notificationService.ts
+   Size: ~1.8 KB
+   Functions:
+   - createNotification()
+   - createSentimentChangeNotification()
+   - createNewAnalysisNotification()
+   - cleanupOldNotifications()
+
+9. Newsletter Service
+   Path: /home/user/WorldPoliticsNews/backend/src/services/newsletterService.ts
+   Size: ~1.5 KB
+   Functions:
+   - getDailySubscribers()
+   - getWeeklySubscribers()
+   - getTopEntitiesForNewsletter()
+   - recordNewsletterIssue()
+   - getNewsletterStats()
+
+10. Comparison Service
+    Path: /home/user/WorldPoliticsNews/backend/src/services/comparisonService.ts
+    Size: ~1.6 KB
+    Functions:
+    - saveComparison()
+    - getUserComparisons()
+    - deleteComparison()
+    - getComparisonStats()
+
+DATABASE
+========
+
+11. Schema Updates
+    Path: /home/user/WorldPoliticsNews/backend/prisma/schema.prisma
+    Changes:
+    - Added Notification model
+    - Added NewsletterSubscription model
+    - Added NewsletterIssue model
+    - Added ComparisonHistory model
+    - Updated User model with relations
+
+12. Migration SQL
+    Path: /home/user/WorldPoliticsNews/backend/prisma/migrations/20260626_add_user_retention_features/migration.sql
+    Size: ~1.8 KB
+    Operations:
+    - Create Notification table with indexes
+    - Create NewsletterSubscription table
+    - Create NewsletterIssue table
+    - Create ComparisonHistory table with indexes
+
+INTEGRATION UPDATES
+===================
+
+13. Header Component Update
+    Path: /home/user/WorldPoliticsNews/apps/web/src/components/layout/Header.tsx
+    Changes:
+    - Import NotificationBell component
+    - Add NotificationBell to header
+    - Add "Meine Vergleiche" navigation link (conditional on user login)
+
+14. Account Page Update
+    Path: /home/user/WorldPoliticsNews/apps/web/src/app/konto/page.tsx
+    Changes:
+    - Import NewsletterPreferences component
+    - Add NewsletterPreferences section to account page
+
+15. Backend Index Update
+    Path: /home/user/WorldPoliticsNews/backend/src/index.ts
+    Changes:
+    - Import notificationsRouter
+    - Import newsletterRouter
+    - Import comparisonsRouter
+    - Register all three routers in app
+
+DOCUMENTATION
+==============
+
+16. Phase B Implementation Guide
+    Path: /home/user/WorldPoliticsNews/PHASE_B_IMPLEMENTATION.md
+    Size: ~6.5 KB
+    Contents: Detailed feature documentation, API specs, next steps, testing
+
+17. Phase B Quick Reference
+    Path: /home/user/WorldPoliticsNews/PHASE_B_QUICK_REFERENCE.md
+    Size: ~4.2 KB
+    Contents: Quick start guide, testing commands, troubleshooting
+
+18. Phase B Files Summary (this file)
+    Path: /home/user/WorldPoliticsNews/PHASE_B_FILES_SUMMARY.txt
+    Size: ~3.0 KB
+    Contents: Inventory of all created/modified files
+
+STATISTICS
+==========
+
+Total Files Created: 15 new files
+Total Files Modified: 3 existing files
+Total Lines of Code: ~1,200+
+Total Documentation: ~10.5 KB
+
+By Category:
+- Frontend Components: 4 files (~9 KB)
+- Backend Routes: 3 files (~6 KB)
+- Backend Services: 3 files (~5 KB)
+- Database: 2 files (~4 KB)
+- Integration Updates: 3 files (modified)
+- Documentation: 3 files (~13 KB)
+
+DEPLOYMENT CHECKLIST
+====================
+
+Database:
+[ ] Run Prisma migration: npm run prisma:migrate:deploy
+[ ] Verify tables created in production database
+[ ] Verify indexes created
+
+Backend:
+[ ] Test all API endpoints with valid tokens
+[ ] Test auth requirements on all endpoints
+[ ] Verify error handling and status codes
+[ ] Load test with concurrent requests
+
+Frontend:
+[ ] Test notification bell displays correctly
+[ ] Test notifications page loads data
+[ ] Test newsletter preferences save/load
+[ ] Test comparison history save/load
+[ ] Test UI responsiveness on mobile
+[ ] Verify links work correctly
+
+Integration:
+[ ] Test header displays notification bell for logged-in users
+[ ] Test comparison link appears in navigation for logged-in users
+[ ] Test newsletter preferences appear on account page
+[ ] Verify proper auth token passing in all requests
+
+Production:
+[ ] Deploy backend changes
+[ ] Deploy database migration
+[ ] Deploy frontend changes
+[ ] Monitor error logs for issues
+[ ] Track user adoption of new features
+
+FUTURE WORK (PHASE B CONTINUATION)
+==================================
+
+Priority 1:
+- Implement cron jobs for newsletter sending
+- Integrate sentiment change notifications with analysis endpoint
+- Auto-save comparisons when users view them
+- Create email templates
+
+Priority 2:
+- Add notification type filters
+- Add "mark all as read" feature
+- Add notification digest preferences
+- Add comparison export/sharing
+
+Priority 3:
+- Implement notification read receipts for email
+- Advanced notification scheduling
+- Comparison templates and sharing
+- User retention analytics dashboard
+
+NOTES
+=====
+
+All components use TypeScript for type safety.
+All API endpoints require JWT authentication.
+Database indexes are optimized for common queries.
+Input validation uses Zod schemas for consistency.
+Error handling follows existing backend patterns.
+Frontend styling uses existing Tailwind CSS classes.
+
+See PHASE_B_IMPLEMENTATION.md for detailed documentation.
+See PHASE_B_QUICK_REFERENCE.md for testing commands.

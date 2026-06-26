@@ -1,4 +1,6 @@
 import 'dotenv/config';
+import * as fs from 'fs';
+import * as path from 'path';
 
 const isDemoMode = process.env.DEMO_MODE === 'true';
 const requiredEnvVars = isDemoMode
@@ -36,6 +38,8 @@ import { historyRouter } from './routes/history';
 import { notificationsRouter } from './routes/notifications';
 import { newsletterRouter } from './routes/newsletter';
 import { comparisonsRouter } from './routes/comparisons';
+import { adminRouter } from './routes/admin';
+import swaggerUi from 'swagger-ui-express';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -80,6 +84,21 @@ app.use('/api/history', historyRouter);
 app.use('/api/notifications', notificationsRouter);
 app.use('/api/newsletter', newsletterRouter);
 app.use('/api/comparisons', comparisonsRouter);
+app.use('/api/admin', adminRouter);
+
+// Load OpenAPI schema
+let openApiSchema: Record<string, any> = {};
+try {
+  const openApiPath = path.join(__dirname, 'openapi.json');
+  const openApiContent = fs.readFileSync(openApiPath, 'utf-8');
+  openApiSchema = JSON.parse(openApiContent);
+} catch (error) {
+  logger.warn({ error }, 'Failed to load OpenAPI schema');
+}
+
+// Swagger UI
+app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(openApiSchema));
+app.get('/api/openapi.json', (_req, res) => res.json(openApiSchema));
 
 app.get('/api/health', async (_req, res) => {
   try {

@@ -1,6 +1,13 @@
 import Link from 'next/link';
 import { SentimentGauge } from '@/components/ui/SentimentGauge';
+import { createMetadata } from '@/lib/metadata';
 import type { SentimentLabel } from '@wpn/shared-types';
+
+export const metadata = createMetadata(
+  'Deutschland Rankings - WorldPoliticsNews',
+  'Top und Flop bewertete Politiker und Parteien in Deutschland nach Medientenor.',
+  { url: '/deutschland' }
+);
 
 interface RankingEntity {
   entityId: string;

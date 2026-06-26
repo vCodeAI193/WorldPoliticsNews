@@ -1,5 +1,12 @@
 import Link from 'next/link';
 import { SearchBar } from '@/components/ui/SearchBar';
+import { createMetadata } from '@/lib/metadata';
+
+export const metadata = createMetadata(
+  'WorldPoliticsNews - Medienanalyse für Politiker',
+  'Finde aus, wie globale Medien über Politiker und Parteien berichten. KI-gestützte Sentiment-Analyse in Echtzeit.',
+  { url: '/' }
+);
 
 const FEATURED = [
   { name: 'Friedrich Merz', id: 'Q567', type: 'politician', country: 'DE' },

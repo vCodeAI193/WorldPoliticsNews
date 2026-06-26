@@ -1,6 +1,13 @@
 import Link from 'next/link';
 import { SearchBar } from '@/components/ui/SearchBar';
+import { createMetadata } from '@/lib/metadata';
 import type { Entity } from '@wpn/shared-types';
+
+export const metadata = createMetadata(
+  'Suche - WorldPoliticsNews',
+  'Suche nach Politikern und Parteien weltweit und finde ihre Medienanalysen.',
+  { url: '/suche' }
+);
 
 interface Props {
   searchParams: Promise<{ q?: string; country?: string }>;

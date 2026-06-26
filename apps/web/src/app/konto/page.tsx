@@ -5,6 +5,7 @@ import { useAuthStore } from '@/store/authStore';
 import { api } from '@/lib/api';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
+import { NewsletterPreferences } from '@/components/ui/NewsletterPreferences';
 
 function KontoInner() {
   const { user, setAuth, clearAuth, refreshToken, token } = useAuthStore();
@@ -127,6 +128,11 @@ function KontoInner() {
             {new Date(user.createdAt).toLocaleDateString('de-DE', { day: '2-digit', month: 'long', year: 'numeric' })}
           </p>
         </div>
+      </div>
+
+      {/* Newsletter Preferences */}
+      <div className="mb-6">
+        <NewsletterPreferences />
       </div>
 
       {/* Change Password */}
