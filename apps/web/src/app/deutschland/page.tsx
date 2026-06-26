@@ -1,12 +1,13 @@
 import Link from 'next/link';
 import { SentimentGauge } from '@/components/ui/SentimentGauge';
+import type { SentimentLabel } from '@wpn/shared-types';
 
 interface RankingEntity {
   entityId: string;
   entityName: string;
   entityCountry: string | null;
   sentiment: number;
-  sentimentLabel: string;
+  sentimentLabel: SentimentLabel;
   generatedAt: string;
 }
 
