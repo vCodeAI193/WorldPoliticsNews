@@ -33,6 +33,9 @@ import { partiesRouter } from './routes/parties';
 import { subscriptionsRouter } from './routes/subscriptions';
 import { trendingRouter } from './routes/trending';
 import { historyRouter } from './routes/history';
+import { notificationsRouter } from './routes/notifications';
+import { newsletterRouter } from './routes/newsletter';
+import { comparisonsRouter } from './routes/comparisons';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -74,6 +77,9 @@ app.use('/api/parties', partiesRouter);
 app.use('/api/subscriptions', subscriptionsRouter);
 app.use('/api/trending', trendingRouter);
 app.use('/api/history', historyRouter);
+app.use('/api/notifications', notificationsRouter);
+app.use('/api/newsletter', newsletterRouter);
+app.use('/api/comparisons', comparisonsRouter);
 
 app.get('/api/health', async (_req, res) => {
   try {

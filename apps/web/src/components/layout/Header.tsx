@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useAuthStore } from '@/store/authStore';
 import { api } from '@/lib/api';
 import { useRouter } from 'next/navigation';
+import { NotificationBell } from '@/components/ui/NotificationBell';
 
 export function Header() {
   const { user, clearAuth, refreshToken } = useAuthStore();
@@ -40,6 +41,7 @@ export function Header() {
         <div className="flex items-center gap-3">
           {user ? (
             <>
+              <NotificationBell />
               {user.subscriptionTier === 'plus' && (
                 <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
                   Plus
