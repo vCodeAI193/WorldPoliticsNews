@@ -123,3 +123,22 @@ export interface PricingPlan {
   interval: 'month' | null;
   features: string[];
 }
+
+// Comfort Features
+export interface SearchHistoryEntry {
+  query: string;
+  timestamp: number;
+}
+
+export interface RecentlyViewedEntity {
+  entityId: string;
+  entityName: string;
+  entityType: 'politician' | 'party';
+  timestamp: number;
+}
+
+export interface ComparisonEntity {
+  entityId: string;
+  entityName: string;
+  entityType: 'politician' | 'party';
+}
