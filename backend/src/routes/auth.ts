@@ -2,8 +2,10 @@ import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { z } from 'zod';
+import { rateLimit } from 'express-rate-limit';
 import { prisma } from '../lib/prisma';
-import { TOKEN_TTL } from '../constants';
+import { TOKEN_TTL, RATE_LIMIT } from '../constants';
+import { logger } from '../lib/logger';
 
 export const authRouter = Router();
 
@@ -24,7 +26,23 @@ function signRefreshToken(userId: string) {
   return jwt.sign({ sub: userId }, process.env.JWT_REFRESH_SECRET!, { expiresIn: TOKEN_TTL.REFRESH });
 }
 
-authRouter.post('/register', async (req, res) => {
+const loginLimiter = rateLimit({
+  windowMs: RATE_LIMIT.AUTH_LOGIN_WINDOW_MS,
+  max: RATE_LIMIT.AUTH_LOGIN_MAX,
+  message: { success: false, error: 'Zu viele Anmeldeversuche. Bitte in 15 Minuten erneut versuchen.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const registerLimiter = rateLimit({
+  windowMs: RATE_LIMIT.AUTH_REGISTER_WINDOW_MS,
+  max: RATE_LIMIT.AUTH_REGISTER_MAX,
+  message: { success: false, error: 'Zu viele Registrierungen von dieser IP. Bitte später erneut versuchen.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+authRouter.post('/register', registerLimiter, async (req, res) => {
   const result = credentialsSchema.safeParse(req.body);
   if (!result.success) {
     return res.status(400).json({ success: false, error: 'Ungültige E-Mail oder Passwort (min. 8 Zeichen)' });
@@ -50,6 +68,7 @@ authRouter.post('/register', async (req, res) => {
     },
   });
 
+  logger.info({ userId: user.id }, 'User registered');
   res.status(201).json({
     success: true,
     data: {
@@ -60,7 +79,7 @@ authRouter.post('/register', async (req, res) => {
   });
 });
 
-authRouter.post('/login', async (req, res) => {
+authRouter.post('/login', loginLimiter, async (req, res) => {
   const result = credentialsSchema.safeParse(req.body);
   if (!result.success) {
     return res.status(400).json({ success: false, error: 'Ungültige Eingabe' });
@@ -84,6 +103,7 @@ authRouter.post('/login', async (req, res) => {
     },
   });
 
+  logger.info({ userId: user.id }, 'User logged in');
   res.json({
     success: true,
     data: {

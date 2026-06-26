@@ -1,9 +1,12 @@
+import Link from 'next/link';
 import { SentimentGauge } from './SentimentGauge';
 import { ArticleCard } from './ArticleCard';
 import { AdBanner } from './AdBanner';
 import { WatchlistButton } from './WatchlistButton';
 import { PlusUpgradeBanner } from './PlusUpgradeBanner';
 import { ShareButtons } from './ShareButtons';
+import { ForceRefreshButton } from './ForceRefreshButton';
+import { SentimentHistory } from './SentimentHistory';
 import type { AnalysisResult } from '@wpn/shared-types';
 
 interface Props {
@@ -12,6 +15,8 @@ interface Props {
   analysis: AnalysisResult;
   entityType: 'politician' | 'party';
   adSlot: string;
+  historyData?: Array<{ sentiment: number; sentimentLabel: string; generatedAt: string }>;
+  forceHref: string;
 }
 
 const ENTITY_META: Record<'politician' | 'party', { emoji: string; label: string }> = {
@@ -19,7 +24,7 @@ const ENTITY_META: Record<'politician' | 'party', { emoji: string; label: string
   party:      { emoji: '🏛️', label: 'Partei' },
 };
 
-export function EntityAnalysisPage({ id, entityName, analysis, entityType, adSlot }: Props) {
+export function EntityAnalysisPage({ id, entityName, analysis, entityType, adSlot, historyData, forceHref }: Props) {
   const { emoji, label } = ENTITY_META[entityType];
 
   return (
@@ -40,6 +45,7 @@ export function EntityAnalysisPage({ id, entityName, analysis, entityType, adSlo
               <span className="ml-2 bg-gray-100 text-gray-500 text-xs px-2 py-0.5 rounded">Cache</span>
             )}
           </p>
+          <ForceRefreshButton href={forceHref} />
         </div>
         <WatchlistButton entityId={id} entityName={analysis.entityName} entityType={entityType} />
       </div>
@@ -61,11 +67,16 @@ export function EntityAnalysisPage({ id, entityName, analysis, entityType, adSlo
           <h2 className="text-lg font-bold text-gray-900 mb-4">Hauptthemen & Kritikpunkte</h2>
           <div className="flex flex-wrap gap-2">
             {analysis.keywords.map((kw) => (
-              <span key={kw} className="bg-blue-50 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
-                {kw}
-              </span>
+              <Link key={kw} href={`/suche?q=${encodeURIComponent(kw)}`} className="bg-blue-50 text-blue-800 hover:bg-blue-100 px-3 py-1 rounded-full text-sm font-medium transition-colors">{kw}</Link>
             ))}
           </div>
+        </section>
+      )}
+
+      {historyData && historyData.length > 0 && (
+        <section className="bg-white rounded-2xl shadow-sm p-6 mb-6">
+          <h2 className="text-lg font-bold text-gray-900 mb-4">Sentiment-Verlauf</h2>
+          <SentimentHistory data={historyData} />
         </section>
       )}
 

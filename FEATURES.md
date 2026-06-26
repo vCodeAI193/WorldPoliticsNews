@@ -34,15 +34,15 @@ Abgehakte Features sind bereits implementiert. Offene Punkte sind noch offen.
 
 ### 2a – Analyse-Tiefe
 
-- [ ] **Historischer Sentiment-Verlauf**: Liniendiagramm über Zeit (z. B. letzte 30 Tage)
+- [x] **Historischer Sentiment-Verlauf**: Liniendiagramm über Zeit (z. B. letzte 30 Tage)
   - Backend: Analyse-Einträge mit Zeitstempel bereits in DB – nur Abruf-Endpunkt fehlt
   - Web/Mobile: Recharts (Web) / Victory Native (Mobile) als Chart-Library
 - [ ] **Vergleichsansicht**: Zwei Politiker/Parteien nebeneinander vergleichen
   - URL-Schema: `/vergleich?a=Q11930&b=Q76`
   - Mobile: eigener Tab oder Share-Sheet-Flow
-- [ ] **Themen-Tags / Keywords**: KI gibt bereits `keywords` zurück – diese als klickbare Filter anzeigen
+- [x] **Themen-Tags / Keywords**: KI gibt bereits `keywords` zurück – diese als klickbare Filter anzeigen
 - [ ] **Quellen-Filterung**: Nutzer kann Quellen-Typen ein-/ausblenden (z. B. nur Qualitätspresse)
-- [ ] **Analyse auf Knopfdruck erzwingen**: Button „Analyse jetzt aktualisieren" (ignoriert Cache)
+- [x] **Analyse auf Knopfdruck erzwingen**: Button „Analyse jetzt aktualisieren" (ignoriert Cache)
 
 ### 2b – Personalisierung
 
@@ -54,6 +54,7 @@ Abgehakte Features sind bereits implementiert. Offene Punkte sind noch offen.
   - Benötigt: SMTP + Verifikationstoken in DB
 - [ ] **Passwort-Reset per E-Mail** (Forgot-Password-Flow)
   - Benötigt: SMTP + Reset-Token (zeitlich begrenzt, 1 h)
+  > E-Mail-Features benötigen einen SMTP-Dienst (z.B. Resend). Umgebungsvariable: SMTP_URL
 - [ ] **Profilbild / Avatar**: Gravatar-Fallback oder Upload via S3
 
 ### 2c – Internationalisierung
@@ -66,10 +67,10 @@ Abgehakte Features sind bereits implementiert. Offene Punkte sind noch offen.
 
 ### 2d – Content-Entdeckung
 
-- [ ] **Autovervollständigung in der Suche**: Debounced Wikidata-Vorschläge im Suchfeld
+- [x] **Autovervollständigung in der Suche**: Debounced Wikidata-Vorschläge im Suchfeld
   - Web: Dropdown unter Suchfeld; Mobile: FlatList über Tastatur
 - [ ] **Ähnliche Politiker / Parteien**: KI-Vorschläge basierend auf Partei/Land
-- [ ] **Länder-Filter**: Suche auf ein Land einschränken (Wikidata `country`-Property)
+- [x] **Länder-Filter**: Suche auf ein Land einschränken (Wikidata `country`-Property)
 - [ ] **Top-Listen**: „Top 10 meistgesuchte Politiker diese Woche" (aus Trending-Daten)
 
 ---
@@ -114,11 +115,11 @@ Abgehakte Features sind bereits implementiert. Offene Punkte sind noch offen.
 - [ ] **CI/CD-Pipeline**: GitHub Actions für `npm test` + Lint auf jedem PR
 - [ ] **Docker Compose**: Lokale Entwicklung ohne manuelle PostgreSQL-Installation
 - [ ] **Datenbankmigrationen versionieren**: Sicherstellen, dass `prisma migrate deploy` im Deploy-Prozess läuft
-- [ ] **Rate-Limiting auf Auth-Endpunkten**: Brute-Force-Schutz auf `/api/auth/login` (z. B. `express-rate-limit`)
+- [x] **Rate-Limiting auf Auth-Endpunkten**: Brute-Force-Schutz auf `/api/auth/login` (z. B. `express-rate-limit`)
 - [ ] **HTTP Security Headers ausbauen**: Content-Security-Policy (CSP) mit Nonce für Inline-Scripts
-- [ ] **Structured Logging**: JSON-Logs mit Pino statt `console.log`
-- [ ] **Health-Check ausbauen**: `/api/health` soll DB-Ping + Cache-Status zurückgeben
-- [ ] **RevenueCat-Webhook-Endpunkt** im Backend: Abo-Status automatisch synchronisieren
+- [x] **Structured Logging**: JSON-Logs mit Pino statt `console.log`
+- [x] **Health-Check ausbauen**: `/api/health` soll DB-Ping + Cache-Status zurückgeben
+- [x] **RevenueCat-Webhook-Endpunkt** im Backend: Abo-Status automatisch synchronisieren
 - [ ] **Abhängigkeiten aktuell halten**: Dependabot oder Renovate Bot einrichten
 
 ---

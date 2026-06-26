@@ -21,6 +21,8 @@ import { RATE_LIMIT } from './constants';
 import cors from 'cors';
 import helmet from 'helmet';
 import { rateLimit } from 'express-rate-limit';
+import { logger } from './lib/logger';
+import { prisma } from './lib/prisma';
 
 import { authRouter } from './routes/auth';
 import { usersRouter } from './routes/users';
@@ -30,6 +32,7 @@ import { politiciansRouter } from './routes/politicians';
 import { partiesRouter } from './routes/parties';
 import { subscriptionsRouter } from './routes/subscriptions';
 import { trendingRouter } from './routes/trending';
+import { historyRouter } from './routes/history';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -70,16 +73,24 @@ app.use('/api/politicians', politiciansRouter);
 app.use('/api/parties', partiesRouter);
 app.use('/api/subscriptions', subscriptionsRouter);
 app.use('/api/trending', trendingRouter);
+app.use('/api/history', historyRouter);
 
-app.get('/api/health', (_req, res) => res.json({ ok: true, timestamp: new Date().toISOString() }));
+app.get('/api/health', async (_req, res) => {
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    res.json({ ok: true, timestamp: new Date().toISOString(), db: 'ok', demo: isDemoMode });
+  } catch {
+    res.status(503).json({ ok: false, timestamp: new Date().toISOString(), db: 'error', demo: isDemoMode });
+  }
+});
 
 app.use((_req, res) => res.status(404).json({ success: false, error: 'Nicht gefunden' }));
 
 app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
-  console.error('Unhandled error:', err);
+  logger.error({ err }, 'Unhandled error');
   res.status(500).json({ success: false, error: 'Interner Serverfehler' });
 });
 
 app.listen(PORT, () => {
-  console.log(`Backend läuft auf Port ${PORT}`);
+  logger.info({ port: PORT }, 'Backend started');
 });

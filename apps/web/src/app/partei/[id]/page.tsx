@@ -3,16 +3,14 @@ import type { AnalysisResult } from '@wpn/shared-types';
 
 interface Props {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ name?: string }>;
+  searchParams: Promise<{ name?: string; force?: string }>;
 }
 
-async function fetchAnalysis(id: string, name: string): Promise<AnalysisResult | null> {
+async function fetchAnalysis(id: string, name: string, force = false): Promise<AnalysisResult | null> {
   const BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
   try {
-    const res = await fetch(
-      `${BASE}/api/parties/${id}/analysis?name=${encodeURIComponent(name)}`,
-      { next: { revalidate: 1800 } }
-    );
+    const url = `${BASE}/api/parties/${id}/analysis?name=${encodeURIComponent(name)}${force ? '&force=true' : ''}`;
+    const res = await fetch(url, force ? { cache: 'no-store' } : { next: { revalidate: 1800 } });
     if (!res.ok) return null;
     const data = await res.json();
     return data.success ? data.data : null;
@@ -21,11 +19,27 @@ async function fetchAnalysis(id: string, name: string): Promise<AnalysisResult |
   }
 }
 
+async function fetchHistory(id: string) {
+  const BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+  try {
+    const res = await fetch(`${BASE}/api/parties/${id}/history`, { next: { revalidate: 3600 } });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.success ? data.data : [];
+  } catch {
+    return [];
+  }
+}
+
 export default async function PartyPage({ params, searchParams }: Props) {
   const { id } = await params;
-  const { name } = await searchParams;
+  const { name, force } = await searchParams;
   const entityName = name || id;
-  const analysis = await fetchAnalysis(id, entityName);
+
+  const [analysis, historyData] = await Promise.all([
+    fetchAnalysis(id, entityName, force === 'true'),
+    fetchHistory(id),
+  ]);
 
   if (!analysis) {
     return (
@@ -44,6 +58,8 @@ export default async function PartyPage({ params, searchParams }: Props) {
       analysis={analysis}
       entityType="party"
       adSlot="3456789013"
+      historyData={historyData}
+      forceHref={`/partei/${id}?name=${encodeURIComponent(entityName)}&force=true`}
     />
   );
 }

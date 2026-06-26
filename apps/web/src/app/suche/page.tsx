@@ -3,15 +3,16 @@ import { SearchBar } from '@/components/ui/SearchBar';
 import type { Entity } from '@wpn/shared-types';
 
 interface Props {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ q?: string; country?: string }>;
 }
 
-async function searchEntities(q: string) {
+async function searchEntities(q: string, country?: string) {
   const BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+  const countryParam = country ? `&country=${encodeURIComponent(country)}` : '';
 
   const [politiciansRes, partiesRes] = await Promise.allSettled([
-    fetch(`${BASE}/api/politicians/search?q=${encodeURIComponent(q)}`, { next: { revalidate: 3600 } }),
-    fetch(`${BASE}/api/parties/search?q=${encodeURIComponent(q)}`, { next: { revalidate: 3600 } }),
+    fetch(`${BASE}/api/politicians/search?q=${encodeURIComponent(q)}${countryParam}`, { next: { revalidate: 3600 } }),
+    fetch(`${BASE}/api/parties/search?q=${encodeURIComponent(q)}${countryParam}`, { next: { revalidate: 3600 } }),
   ]);
 
   const politicians =
@@ -28,24 +29,24 @@ async function searchEntities(q: string) {
 }
 
 export default async function SuchePage({ searchParams }: Props) {
-  const { q } = await searchParams;
+  const { q, country } = await searchParams;
 
   if (!q || q.trim().length < 2) {
     return (
       <div className="max-w-3xl mx-auto px-4 py-12">
         <h1 className="text-2xl font-bold mb-6 text-gray-900">Politiker & Parteien suchen</h1>
-        <SearchBar />
+        <SearchBar defaultCountry={country} />
       </div>
     );
   }
 
-  const { politicians, parties } = await searchEntities(q);
+  const { politicians, parties } = await searchEntities(q, country);
   const total = politicians.length + parties.length;
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
       <div className="mb-6">
-        <SearchBar defaultValue={q} />
+        <SearchBar defaultValue={q} defaultCountry={country} />
       </div>
 
       <p className="text-sm text-gray-500 mb-6">

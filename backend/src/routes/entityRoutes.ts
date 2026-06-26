@@ -6,6 +6,8 @@ import { searchWikidata } from '../services/wikidataService';
 import { getMockAnalysis } from '../services/mockData';
 import type { SearchResult } from '@wpn/shared-types';
 import { RATE_LIMIT } from '../constants';
+import { prisma } from '../lib/prisma';
+import { logger } from '../lib/logger';
 
 const isDemoMode = process.env.DEMO_MODE === 'true';
 
@@ -41,14 +43,14 @@ export function createEntityRouter(
       const results = await searchWikidata(q.trim(), entityType, country);
       res.json({ success: true, data: results });
     } catch (err) {
-      console.error(`${apiSegment}-Suche fehlgeschlagen:`, err);
+      logger.error({ err, q }, `${apiSegment} search failed`);
       res.status(500).json({ success: false, error: 'Suche fehlgeschlagen. Bitte erneut versuchen.' });
     }
   });
 
   router.get('/:id/analysis', analysisLimiter, optionalAuth, async (req: AuthRequest, res) => {
     const { id } = req.params;
-    const { name } = req.query as { name?: string };
+    const { name, force } = req.query as { name?: string; force?: string };
 
     if (!name?.trim() || name.length > 256) {
       return res.status(400).json({ success: false, error: 'Parameter "name" ist erforderlich (max. 256 Zeichen)' });
@@ -65,11 +67,32 @@ export function createEntityRouter(
     const isPlusUser = req.user?.subscriptionTier === 'plus';
 
     try {
-      const analysis = await getAnalysis(id, name.trim(), entityType, isPlusUser);
+      const analysis = await getAnalysis(id, name.trim(), entityType, isPlusUser, force === 'true');
       res.json({ success: true, data: analysis });
     } catch (err) {
-      console.error(`Analyse-Fehler für ${apiSegment} ${id}:`, err);
+      logger.error({ err, id }, `${apiSegment} analysis failed`);
       res.status(500).json({ success: false, error: 'Analyse konnte nicht erstellt werden. Bitte später versuchen.' });
+    }
+  });
+
+  router.get('/:id/history', async (req, res) => {
+    const { id } = req.params;
+    const days = Math.min(parseInt((req.query.days as string) || '30', 10), 90);
+
+    if (!/^[w-]+$/.test(id) || id.length > 64) {
+      return res.status(400).json({ success: false, error: 'Ungültige Entitäts-ID' });
+    }
+
+    try {
+      const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+      const history = await prisma.analysisHistory.findMany({
+        where: { entityId: id, entityType },
+        orderBy: { generatedAt: 'asc' },
+        select: { sentiment: true, sentimentLabel: true, generatedAt: true },
+      });
+      res.json({ success: true, data: history });
+    } catch {
+      res.json({ success: true, data: [] });
     }
   });
 

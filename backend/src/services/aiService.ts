@@ -4,6 +4,7 @@ import { prisma } from '../lib/prisma';
 import type { Prisma } from '@prisma/client';
 import { toSentimentLabel, type AnalysisResult, type ArticleSnippet, type SentimentLabel } from '@wpn/shared-types';
 import { CACHE_TTL } from '../constants';
+import { logger } from '../lib/logger';
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 const memCache = new NodeCache({ stdTTL: 3600, checkperiod: 120 });
@@ -21,23 +22,26 @@ export async function getAnalysis(
   entityId: string,
   entityName: string,
   entityType: 'politician' | 'party',
-  isPlusUser: boolean
+  isPlusUser: boolean,
+  force = false
 ): Promise<AnalysisResult> {
   const cacheKey = `${entityType}:${entityId}`;
 
-  // L1: in-memory cache
-  const memHit = memCache.get<AnalysisResult>(cacheKey);
-  if (memHit) return { ...memHit, cached: true };
+  if (!force) {
+    // L1: in-memory cache
+    const memHit = memCache.get<AnalysisResult>(cacheKey);
+    if (memHit) return { ...memHit, cached: true };
 
-  // L2: database cache
-  const dbRow = await prisma.analysis.findUnique({
-    where: { entityId_entityType: { entityId, entityType } },
-  });
+    // L2: database cache
+    const dbRow = await prisma.analysis.findUnique({
+      where: { entityId_entityType: { entityId, entityType } },
+    });
 
-  if (dbRow && dbRow.expiresAt > new Date()) {
-    const result = rowToResult(dbRow, true);
-    memCache.set(cacheKey, result);
-    return result;
+    if (dbRow && dbRow.expiresAt > new Date()) {
+      const result = rowToResult(dbRow, true);
+      memCache.set(cacheKey, result);
+      return result;
+    }
   }
 
   // Cache miss: fetch fresh analysis
@@ -63,6 +67,18 @@ export async function getAnalysis(
 
   const result = rowToResult(saved, false);
   memCache.set(cacheKey, result, Math.floor(ttl / 1000));
+
+  // Save to history for trending chart
+  prisma.analysisHistory.create({
+    data: {
+      entityType,
+      entityId,
+      entityName,
+      sentiment: analysis.sentiment,
+      sentimentLabel: analysis.sentimentLabel,
+    },
+  }).catch((err) => logger.warn({ err }, 'Failed to save analysis history'));
+
   return result;
 }
 
@@ -113,7 +129,7 @@ async function fetchArticles(
           });
         }
       } catch (err) {
-        console.warn(`Tavily-Suche fehlgeschlagen für "${query}":`, err);
+        logger.warn({ err }, `Tavily-Suche fehlgeschlagen für "${query}"`);
       }
     })
   );

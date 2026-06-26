@@ -62,3 +62,15 @@ model Analysis {
   @@index([entityId, entityType])
   @@index([expiresAt])
 }
+
+model AnalysisHistory {
+  id             String   @id @default(cuid())
+  entityType     String
+  entityId       String
+  entityName     String
+  sentiment      Float
+  sentimentLabel String
+  generatedAt    DateTime @default(now())
+
+  @@index([entityId, entityType, generatedAt])
+}

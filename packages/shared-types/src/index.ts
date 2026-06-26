@@ -78,6 +78,12 @@ export interface TrendingEntity {
   generatedAt: string;
 }
 
+export interface AnalysisHistoryPoint {
+  sentiment: number;
+  sentimentLabel: SentimentLabel;
+  generatedAt: string;
+}
+
 // API response wrappers
 export interface ApiSuccess<T> {
   success: true;
