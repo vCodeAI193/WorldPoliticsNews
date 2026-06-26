@@ -8,16 +8,24 @@ datasource db {
 }
 
 model User {
-  id               String          @id @default(cuid())
-  email            String          @unique
-  passwordHash     String
-  subscriptionTier String          @default("free")
-  stripeCustomerId String?         @unique
-  revenueCatUserId String?         @unique
-  watchlist        WatchlistItem[]
-  refreshTokens    RefreshToken[]
-  createdAt        DateTime        @default(now())
-  updatedAt        DateTime        @updatedAt
+  id                           String          @id @default(cuid())
+  email                        String          @unique
+  passwordHash                 String
+  subscriptionTier             String          @default("free")
+  stripeCustomerId             String?         @unique
+  revenueCatUserId             String?         @unique
+  emailVerified                Boolean         @default(false)
+  verificationToken            String?         @unique
+  verificationTokenExpiresAt   DateTime?
+  resetToken                   String?         @unique
+  resetTokenExpiresAt          DateTime?
+  watchlist                    WatchlistItem[]
+  refreshTokens                RefreshToken[]
+  notifications                Notification[]
+  newsletterSubscription       NewsletterSubscription?
+  comparisonHistory            ComparisonHistory[]
+  createdAt                    DateTime        @default(now())
+  updatedAt                    DateTime        @updatedAt
 }
 
 model RefreshToken {
@@ -77,4 +85,53 @@ model AnalysisHistory {
 
   @@index([entityId, entityType, generatedAt])
   @@index([entityCountry, entityType, generatedAt])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String   // 'new_analysis', 'sentiment_change'
+  entityId  String
+  entityName String
+  message   String
+  link      String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId, read])
+  @@index([userId, createdAt])
+}
+
+model NewsletterSubscription {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subscribed Boolean  @default(true)
+  frequency String   @default("weekly") // weekly, daily, never
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model NewsletterIssue {
+  id         String   @id @default(cuid())
+  sentAt     DateTime?
+  topEntities Json     // array of {entityId, entityName, sentiment}
+  createdAt  DateTime @default(now())
+
+  @@index([sentAt])
+}
+
+model ComparisonHistory {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  entityIds   Json     // array of 2-4 entity IDs
+  entityNames Json     // array of names
+  entityTypes Json     // array of types
+  title       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId, createdAt])
 }

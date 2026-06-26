@@ -69,9 +69,28 @@ export function createEntityRouter(
     try {
       const analysis = await getAnalysis(id, name.trim(), entityType, isPlusUser, force === 'true', country);
       res.json({ success: true, data: analysis });
-    } catch (err) {
+    } catch (err: any) {
       logger.error({ err, id }, `${apiSegment} analysis failed`);
-      res.status(500).json({ success: false, error: 'Analyse konnte nicht erstellt werden. Bitte später versuchen.' });
+
+      // Determine specific error code and message
+      let errorCode = 'ANALYSIS_ERROR';
+      let errorMessage = 'Analyse konnte nicht erstellt werden. Bitte später versuchen.';
+
+      const errorStr = err?.message?.toLowerCase() || '';
+      const errorStatus = err?.status || err?.response?.status;
+
+      if (errorStatus === 429 || errorStr.includes('rate limit') || errorStr.includes('quota')) {
+        errorCode = 'ANALYSIS_QUOTA_EXCEEDED';
+        errorMessage = 'API-Quota überschritten. Bitte in 1 Stunde erneut versuchen.';
+      } else if (errorStr.includes('tavily') || errorStr.includes('source') || errorStr.includes('search')) {
+        errorCode = 'ANALYSIS_SOURCE_UNAVAILABLE';
+        errorMessage = 'Nachrichtenquellen nicht erreichbar. Später versuchen.';
+      } else if (errorStr.includes('claude') || errorStr.includes('anthropic')) {
+        errorCode = 'ANALYSIS_AI_ERROR';
+        errorMessage = 'KI-Analyse fehlgeschlagen. Später versuchen.';
+      }
+
+      res.status(500).json({ success: false, error: errorMessage, code: errorCode });
     }
   });
 

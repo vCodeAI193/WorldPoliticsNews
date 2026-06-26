@@ -7,6 +7,11 @@ import { prisma } from '../lib/prisma';
 import { TOKEN_TTL, RATE_LIMIT } from '../constants';
 import { logger } from '../lib/logger';
 
+// Helper function to generate a random token
+function generateRandomToken(length: number = 6): string {
+  return Math.random().toString(36).substring(2, 2 + length).padEnd(length, '0');
+}
+
 export const authRouter = Router();
 
 // Pre-hashed dummy used to run bcrypt.compare even when a user is not found,
@@ -55,7 +60,21 @@ authRouter.post('/register', registerLimiter, async (req, res) => {
   }
 
   const passwordHash = await bcrypt.hash(password, 12);
-  const user = await prisma.user.create({ data: { email, passwordHash } });
+  const verificationToken = generateRandomToken(6);
+  const verificationTokenExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+  const user = await prisma.user.create({
+    data: {
+      email,
+      passwordHash,
+      verificationToken,
+      verificationTokenExpiresAt,
+    },
+  });
+
+  // Log email verification (mock implementation)
+  logger.info({ userId: user.id, email: user.email, verificationToken }, 'Email verification sent');
+  console.log(`📧 Verification email would be sent to ${email} with token: ${verificationToken}`);
 
   const token = signAccessToken(user.id, user.email, user.subscriptionTier);
   const refreshToken = signRefreshToken(user.id);
@@ -76,6 +95,7 @@ authRouter.post('/register', registerLimiter, async (req, res) => {
       refreshToken,
       user: { id: user.id, email: user.email, subscriptionTier: user.subscriptionTier, createdAt: user.createdAt },
     },
+    message: 'Registrierung erfolgreich. Bitte überprüfen Sie Ihre E-Mail zur Bestätigung.',
   });
 });
 
@@ -146,4 +166,107 @@ authRouter.post('/logout', async (req, res) => {
     await prisma.refreshToken.deleteMany({ where: { token: refreshToken } });
   }
   res.json({ success: true, data: null });
+});
+
+// Email verification endpoint
+authRouter.post('/verify-email', async (req, res) => {
+  const { token } = req.body;
+
+  if (!token || typeof token !== 'string' || token.length !== 6) {
+    return res.status(400).json({ success: false, error: 'Ungültiger Verifikations-Code' });
+  }
+
+  const user = await prisma.user.findFirst({
+    where: {
+      verificationToken: token,
+      verificationTokenExpiresAt: { gt: new Date() },
+    },
+  });
+
+  if (!user) {
+    return res.status(400).json({ success: false, error: 'Verifikations-Code ungültig oder abgelaufen' });
+  }
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      emailVerified: true,
+      verificationToken: null,
+      verificationTokenExpiresAt: null,
+    },
+  });
+
+  logger.info({ userId: user.id }, 'Email verified');
+  res.json({ success: true, message: 'E-Mail erfolgreich bestätigt' });
+});
+
+// Forgot password endpoint
+authRouter.post('/forgot-password', registerLimiter, async (req, res) => {
+  const { email } = req.body;
+
+  if (!email || typeof email !== 'string') {
+    return res.status(400).json({ success: false, error: 'E-Mail ist erforderlich' });
+  }
+
+  const user = await prisma.user.findUnique({ where: { email } });
+
+  if (!user) {
+    // Return success even if user doesn't exist (security best practice)
+    return res.json({ success: true, message: 'Wenn die E-Mail existiert, erhalten Sie einen Reset-Link' });
+  }
+
+  const resetToken = generateRandomToken(32);
+  const resetTokenExpiresAt = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      resetToken,
+      resetTokenExpiresAt,
+    },
+  });
+
+  // Log password reset email (mock implementation)
+  logger.info({ userId: user.id, email }, 'Password reset email sent');
+  console.log(`📧 Password reset email would be sent to ${email} with token: ${resetToken}`);
+
+  res.json({ success: true, message: 'Wenn die E-Mail existiert, erhalten Sie einen Reset-Link' });
+});
+
+// Reset password endpoint
+authRouter.post('/reset-password', async (req, res) => {
+  const { token, password } = req.body;
+
+  if (!token || typeof token !== 'string' || !password || typeof password !== 'string') {
+    return res.status(400).json({ success: false, error: 'Token und Passwort sind erforderlich' });
+  }
+
+  if (password.length < 8 || password.length > 72) {
+    return res.status(400).json({ success: false, error: 'Passwort muss 8–72 Zeichen lang sein' });
+  }
+
+  const user = await prisma.user.findFirst({
+    where: {
+      resetToken: token,
+      resetTokenExpiresAt: { gt: new Date() },
+    },
+  });
+
+  if (!user) {
+    return res.status(400).json({ success: false, error: 'Reset-Token ungültig oder abgelaufen' });
+  }
+
+  const passwordHash = await bcrypt.hash(password, 12);
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      passwordHash,
+      resetToken: null,
+      resetTokenExpiresAt: null,
+    },
+  });
+
+  logger.info({ userId: user.id }, 'Password reset');
+  res.json({ success: true, message: 'Passwort erfolgreich zurückgesetzt' });
 });
