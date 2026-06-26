@@ -23,7 +23,8 @@ export async function getAnalysis(
   entityName: string,
   entityType: 'politician' | 'party',
   isPlusUser: boolean,
-  force = false
+  force = false,
+  entityCountry?: string
 ): Promise<AnalysisResult> {
   const cacheKey = `${entityType}:${entityId}`;
 
@@ -61,8 +62,8 @@ export async function getAnalysis(
 
   const saved = await prisma.analysis.upsert({
     where: { entityId_entityType: { entityId, entityType } },
-    create: { entityType, entityId, entityName, expiresAt, ...analysisData },
-    update: { entityName, expiresAt, generatedAt: new Date(), ...analysisData },
+    create: { entityType, entityId, entityName, entityCountry, expiresAt, ...analysisData },
+    update: { entityName, entityCountry, expiresAt, generatedAt: new Date(), ...analysisData },
   });
 
   const result = rowToResult(saved, false);
@@ -74,6 +75,7 @@ export async function getAnalysis(
       entityType,
       entityId,
       entityName,
+      entityCountry,
       sentiment: analysis.sentiment,
       sentimentLabel: analysis.sentimentLabel,
     },

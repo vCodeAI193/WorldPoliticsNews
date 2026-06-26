@@ -50,6 +50,7 @@ model Analysis {
   entityType     String
   entityId       String
   entityName     String
+  entityCountry  String?
   summary        String   @db.Text
   sentiment      Float
   sentimentLabel String
@@ -61,6 +62,7 @@ model Analysis {
   @@unique([entityId, entityType])
   @@index([entityId, entityType])
   @@index([expiresAt])
+  @@index([entityCountry, entityType, sentiment])
 }
 
 model AnalysisHistory {
@@ -68,9 +70,11 @@ model AnalysisHistory {
   entityType     String
   entityId       String
   entityName     String
+  entityCountry  String?
   sentiment      Float
   sentimentLabel String
   generatedAt    DateTime @default(now())
 
   @@index([entityId, entityType, generatedAt])
+  @@index([entityCountry, entityType, generatedAt])
 }
